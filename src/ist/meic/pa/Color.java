@@ -5,7 +5,9 @@ import ist.meic.pa.GenericFunctions.GenericFunction;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @GenericFunction
 class Color {
@@ -22,6 +24,10 @@ class Color {
         Method[] methods = color.getDeclaredMethods();
 
         for (Method m : methods) {
+
+            if (m.getName().equals("mixTest")) {
+                continue;
+            }
 
             Type[] types = m.getGenericParameterTypes();
             HashMap lastMap = myMap;
@@ -48,16 +54,83 @@ class Color {
 
     }
 
+    static private class Node {
+        HashMap lastMap;
+        int lastIndex;
+        Node prevNode;
+    }
 
-    public static String mixTest(Object c1, Object c2) throws InvocationTargetException, IllegalAccessException {
+    public static String mixTest(Object... args) throws InvocationTargetException, IllegalAccessException {
 
 
-        try {
-            return (String) ((Method) ((HashMap) myMap.get(c1.getClass())).get(c2.getClass())).invoke(null, c1, c2);
-        } catch (NullPointerException e) {
-            return (String) ((Method) ((HashMap) myMap.get(c2.getClass())).get(c1.getClass())).invoke(null, c2, c1);
+        HashMap lastMap = myMap;
+        Method resultedMethod = null;
+        Node lastNode = null;
+        int mapsEncontred = 0;
+        List<Integer> argsInvokeOrder = new ArrayList<>();
+
+        for (int i = 0; i < args.length; i++) {
+
+            Object arg = args[i];
+
+            if (argsInvokeOrder.contains(i)) {
+                continue;
+            }
+
+            if (mapsEncontred == args.length - 1) {
+
+                Method method = (Method) lastMap.get(arg.getClass());
+                if (method != null) {
+                    resultedMethod = method;
+                    argsInvokeOrder.add(i);
+                    break;
+                }
+
+            } else {
+                HashMap argMap = (HashMap) lastMap.get(arg.getClass());
+                if (argMap != null) {
+
+                    Node node = new Node();
+                    node.lastIndex = i;
+                    node.lastMap = lastMap;
+                    node.prevNode = lastNode;
+                    lastNode = node;
+                    lastMap = argMap;
+                    argsInvokeOrder.add(i);
+                    mapsEncontred++;
+                    i = -1;
+                    continue;
+
+                }
+
+            }
+
+            if (i == args.length - 1) {
+                lastMap = lastNode.lastMap;
+                i = lastNode.lastIndex;
+                mapsEncontred--;
+                for (int j = 0; j < argsInvokeOrder.size(); j++) {
+                    if (argsInvokeOrder.get(j) == lastNode.lastIndex) {
+                        argsInvokeOrder.remove(j);
+                        break;
+                    }
+                }
+
+                lastNode = lastNode.prevNode;
+            }
+
 
         }
+
+
+        Object[] argumentsToInvoke = new Object[argsInvokeOrder.size()];
+
+        for (int i = 0; i < argsInvokeOrder.size(); i++) {
+            int index = argsInvokeOrder.get(i);
+            argumentsToInvoke[i] = args[index];
+        }
+
+        return (String) resultedMethod.invoke(null, argumentsToInvoke);
 
     }
 
@@ -102,3 +175,5 @@ class Blue extends Color {
 
 class Yellow extends Color {
 }
+
+
