@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 
 public class WithGenericFunctions {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
 
         if (args.length != 1) {
             System.out.println("Incorrect use of WithGenericFunctions <ProgramName>");
@@ -19,32 +19,26 @@ public class WithGenericFunctions {
         String[] restArgs = new String[args.length - 1];
         System.arraycopy(args, 1, restArgs, 0, restArgs.length);
         //load class with args
-        try {
-            loadClass(programName, restArgs);
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+
+        init(programName, restArgs);
+
     }
 
-    private static void loadClass(String name, String[] args) throws NotFoundException, CannotCompileException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private static void init(String name, String[] args) throws Throwable {
+
+        //configure classpoll and add translator to loader
         ClassPool pool = ClassPool.getDefault();
-        Loader classLoader = new Loader(pool);
+        Translator translator = new GFTranslator();
+        Loader classLoader = new Loader();
+        classLoader.addTranslator(pool, translator);
+        classLoader.run(name, args);
+
+    /*    //get the class to run the main method
         CtClass ctClass = pool.get(name);
-        CtMethod ctMethod = ctClass.getDeclaredMethod("main");
-        ctMethod.setBody("{\n" +
-                "        System.out.println(\"NOT Running\");\n" +
-                "    }");
         Class<?> rtClass = ctClass.toClass();
 
         Method main = rtClass.getMethod("main", args.getClass());
         main.invoke(null, new Object[]{args});
+        */
     }
 }
