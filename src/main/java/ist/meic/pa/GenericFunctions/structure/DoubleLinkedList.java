@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author PM-Uninova
  */
 public class DoubleLinkedList<E> implements List<E> {
 

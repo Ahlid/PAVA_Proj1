@@ -2,7 +2,6 @@ package main.java.ist.meic.pa.GenericFunctions.structure;
 /**
  * An interface for a position, which is a holder object storing a
  * single element.
- * @author Roberto Tamassia, Michael Goodrich
  */
 //begin#fragment All
 public interface Position<E> {

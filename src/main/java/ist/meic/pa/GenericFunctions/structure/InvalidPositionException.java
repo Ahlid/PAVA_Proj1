@@ -1,7 +1,6 @@
 package main.java.ist.meic.pa.GenericFunctions.structure;
 /**
  * Thrown when a position is determined to be invalid.
- * @author Roberto Tamassia, Michael Goodrich
  */
 //begin#fragment InvalidPositionException
 // A run-time exception for invalid positions

@@ -4,7 +4,6 @@ package main.java.ist.meic.pa.GenericFunctions.structure;
  * Signals that the boundaries of a data structure have been illegally
  * traversed (e.g. past the end of a list).
  *
- * @author Roberto Tamassia
  */
 
 public class BoundaryViolationException extends RuntimeException {

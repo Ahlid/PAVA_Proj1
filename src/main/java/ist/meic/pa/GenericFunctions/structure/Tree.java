@@ -5,7 +5,6 @@ import java.util.Iterator;
 /**
  * An interface for a tree where nodes can have an arbitrary number of children.
 //end#fragment Tree
- * @author Michael Goodrich
 //begin#fragment Tree
  */
 public interface Tree<E> {

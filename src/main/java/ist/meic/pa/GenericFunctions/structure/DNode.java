@@ -6,7 +6,6 @@ package main.java.ist.meic.pa.GenericFunctions.structure;
 
 /**
  *
- * @author PM-Uninova
  */
 public class DNode<E> {
     

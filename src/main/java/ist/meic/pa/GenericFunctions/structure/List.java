@@ -7,7 +7,6 @@ package main.java.ist.meic.pa.GenericFunctions.structure;
 
 /**
  *
- * @author PM-Uninova
  */
 
     public interface List<E> extends Iterable<E> {
