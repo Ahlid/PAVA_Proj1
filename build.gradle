@@ -5,14 +5,12 @@
  * Learn how to create Gradle builds at https://guides.gradle.org/creating-new-gradle-builds/
  */
 
-
 group 'lab01'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'application'
 
-
-mainClassName  = 'ist.meic.pa.GenericFunctions/WithGenericFunctions'
+mainClassName  = 'ist.meic.pa.GenericFunctions.WithGenericFunctions'
 
 sourceCompatibility = 1.8
 
@@ -20,25 +18,11 @@ repositories {
     mavenCentral()
 }
 
-
 dependencies {
     compile group: 'org.javassist', name: 'javassist', version: '3.15.0-GA'
-    compile 'com.google.code.gson:gson:2.2.4'
 }
-
 
 run {
     standardInput = System.in
-    args = ["ist.meic.pa.Main"]
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src/'
-        }
-        resources {
-            srcDir 'src/'
-        }
-    }
+    args = ["ist.meic.pa.ColorMixingTest"]
 }
