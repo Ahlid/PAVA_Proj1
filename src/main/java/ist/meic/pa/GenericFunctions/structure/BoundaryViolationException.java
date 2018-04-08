@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa.GenericFunctions.structure;
+package ist.meic.pa.GenericFunctions.structure;
 
 /**
  * Signals that the boundaries of a data structure have been illegally

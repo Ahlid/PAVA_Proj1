@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa.GenericFunctions.structure;
+package ist.meic.pa.GenericFunctions.structure;
 /**
  * An interface for a position, which is a holder object storing a
  * single element.

@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa.GenericFunctions.structure;
+package ist.meic.pa.GenericFunctions.structure;
 /**
  * Runtime exception thrown when one tries to create the root of a
  * tree that is not empty.

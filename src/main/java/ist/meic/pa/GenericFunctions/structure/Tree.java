@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa.GenericFunctions.structure;
+package ist.meic.pa.GenericFunctions.structure;
 import java.util.Iterator;
 
 //begin#fragment Tree

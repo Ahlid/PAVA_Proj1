@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa.GenericFunctions.structure;
+package ist.meic.pa.GenericFunctions.structure;
 
 /*
  * To change this template, choose Tools | Templates
