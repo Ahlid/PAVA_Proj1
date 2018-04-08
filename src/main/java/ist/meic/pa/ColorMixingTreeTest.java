@@ -13,7 +13,7 @@ import ist.meic.pa.GenericFunctions.structure.TypeNode;
 
 public class ColorMixingTreeTest {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException {
 		prepare(Color.class);
 
 		Color[] colors = { new Red(), new Yellow(), new Blue() };
@@ -26,7 +26,7 @@ public class ColorMixingTreeTest {
 			}
 	}
 
-	public static void prepare(Class clazz) {
+	public static void prepare(Class clazz) throws ClassNotFoundException {
 		Map<String, TypeNode> typeTree = new HashMap<String, TypeNode>();
 
 		// Find name conflicts
@@ -54,22 +54,23 @@ public class ColorMixingTreeTest {
 
 				TypeNode curNode = null;
 				for(Type type : m.getGenericParameterTypes()) {
+					Class<? extends Object> c = Class.forName(type.getTypeName()); 
 
 					// first iteration always enters here
 					if (curNode == null)
-						curNode = tree.getTypeNode(type);
+						curNode = tree.getTypeNode(c);
 
 					// init root node or add a new one to existing
-					TypeNode newNode = new TypeNode(type);
+					TypeNode newNode = new TypeNode(c);
 					if (curNode == null) {
 						tree.addNode(newNode);
 						curNode = newNode;
 						continue;
 					} else {
-						if (!curNode.hasType(type))
+						if (!curNode.hasType(c))
 							curNode.addNode(newNode);
 					}
-					curNode = curNode.getTypeNode(type);
+					curNode = curNode.getTypeNode(c);
 				}
 
 				// Register the tree
@@ -80,7 +81,7 @@ public class ColorMixingTreeTest {
 		Color[] colors = { new Red(), new Yellow(), new Blue() };
 		for (Color c1 : colors)
 			for (Color c2 : colors) {
-				typeTree.get( c1.getClass());
+				typeTree.get("mix").getTypeNode(c1.getClass()).getTypeNode(c2.getClass());
 			}
 	}
 

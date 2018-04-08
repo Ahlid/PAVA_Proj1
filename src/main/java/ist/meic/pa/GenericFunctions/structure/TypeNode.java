@@ -1,26 +1,53 @@
 package ist.meic.pa.GenericFunctions.structure;
 
-import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TypeNode {
 
 	private boolean root = false;
-	private Type t;
+	private Class<? extends Object> clazz;
 	private TypeNode parentNode;
-	private Map<Type, TypeNode> children = new HashMap<Type, TypeNode>();
+	private Map<Class<? extends Object>, TypeNode> children = new HashMap<Class<? extends Object>, TypeNode>();
 
 	public TypeNode() {
 		this.root = true;
 	}
 
-	public TypeNode(Type t) {
-		this.t = t;
+	public TypeNode(Class<? extends Object> clazz) {
+		this.clazz = clazz;
 	}
 
-	public Type getType() {
-		return t;
+	public boolean isRoot() {
+		return root;
+	}
+
+	public boolean isLeaf() {
+		return children.isEmpty();
+	}
+
+	public List<Class<? extends Object>> generateArgumentArray() {
+		List<Class<? extends Object>> classes = new ArrayList<Class<? extends Object>>();
+
+		TypeNode tn = this;
+		while (!tn.isRoot()) {
+			classes.add(tn.getMappedType());
+			tn = tn.getParent();
+		}
+
+		Collections.reverse(classes);
+		return classes;
+	}
+
+	public Class<? extends Object> getMappedType() {
+		return clazz;
+	}
+
+	public void setParent(TypeNode n) {
+		parentNode = n;
 	}
 
 	public TypeNode getParent() {
@@ -31,16 +58,17 @@ public class TypeNode {
 		return parentNode != null;
 	}
 
-	public TypeNode getTypeNode(Type t) {
-		return children.get(t);
+	public TypeNode getTypeNode(Class<? extends Object> clazz) {
+		return children.get(clazz);
 	}
 
-	public boolean hasType(Type t) {
-		return children.containsKey(t);
+	public boolean hasType(Class<? extends Object> clazz) {
+		return children.containsKey(clazz);
 	}
 
 	public void addNode(TypeNode n) {
-		children.put(n.getType(), n);
+		n.setParent(this);
+		children.put(n.getMappedType(), n);
 	}
 
 	public boolean hasChildren() {
