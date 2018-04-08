@@ -1,4 +1,4 @@
-package ist.meic.pa.GenericFunctions.strategies;
+package main.java.ist.meic.pa.GenericFunctions.strategies;
 
 import java.io.IOException;
 import java.util.ArrayList;
