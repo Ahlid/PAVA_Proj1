@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa;
+package ist.meic.pa;
 
 
 import java.lang.reflect.InvocationTargetException;

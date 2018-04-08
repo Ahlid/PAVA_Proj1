@@ -1,4 +1,4 @@
-package main.java.ist.meic.pa;
+package ist.meic.pa;
 
 import ist.meic.pa.GenericFunctions.GenericFunction;
 
