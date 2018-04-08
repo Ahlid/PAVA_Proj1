@@ -60,13 +60,15 @@ public class GFTMapStrategy {
 
 		for (int i = 1; i<=parameterList.length; i++) {
 			sb.append(String.format("Class c%s = $%s.getClass();",i,i));
+			sb.append("System.out.println(c"+ i +".getName());");
 			args.add("c"+i+".cast($"+i+")");
 		}
+		
 		
 		sb.append(String.format("return %s$original(%s);", methodName, String.join(",", args)));
 		sb.append("}");
 		newMethod.setBody(sb.toString());
-//ctClass.getClass().getInterfaces()
+
 		return newMethod;
 	}
 

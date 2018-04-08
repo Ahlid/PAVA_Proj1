@@ -6,6 +6,10 @@ import javassist.CtClass;
 public class GFTVisitorStrategy {
 
 	public static void prepare(CtClass ctClass) throws InitializationException {
+		
+		
+		
+		
 	}
 
 }

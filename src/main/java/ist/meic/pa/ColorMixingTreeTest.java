@@ -1,131 +1,87 @@
 package ist.meic.pa;
 
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import ist.meic.pa.GenericFunctions.structure.TypeNode;
 
 public class ColorMixingTreeTest {
 
-    public static void main(String[] args) {
-        Color[] colors = {new Red(), new Yellow(), new Blue()};
+	public static void main(String[] args) {
+		prepare(Color.class);
 
-        for (Color c1 : colors)
-            for (Color c2 : colors) {
-                String out = Color.mix(c1, c2);
-                System.out.println(String.format("%s + %s = %s", c1.getClass().getSimpleName(),
-                        c2.getClass().getSimpleName(), out));
-            }
-    }
+		Color[] colors = { new Red(), new Yellow(), new Blue() };
 
-    // test stuff
-    public static HashMap myMap = new HashMap();
+		for (Color c1 : colors)
+			for (Color c2 : colors) {
+				String out = Color.mix(c1, c2);
+				System.out.println(String.format("%s + %s = %s", c1.getClass().getSimpleName(),
+						c2.getClass().getSimpleName(), out));
+			}
+	}
 
-    public static void init() throws ClassNotFoundException {
-        Class<Color> color = Color.class;
-        Method[] methods = color.getDeclaredMethods();
+	public static void prepare(Class clazz) {
+		Map<String, TypeNode> typeTree = new HashMap<String, TypeNode>();
 
-        for (Method m : methods) {
-            Type[] types = m.getGenericParameterTypes();
-            HashMap lastMap = myMap;
+		// Find name conflicts
+		Map<String, Integer> counts = new HashMap<String, Integer>();
+		for (Method m : clazz.getDeclaredMethods()) {
+			Integer count = counts.get(m.getName());
+			counts.put(m.getName(), count == null ? 0 : new Integer(count + 1));
+		}
 
-            for (int i = 0; i < types.length; i++) {
-                Type t = types[i];
-                if (i == types.length - 1) {
-                    lastMap.put(Class.forName(t.getTypeName()), m);
-                    break;
-                }
+		// Map types
+		for (Entry<String, Integer> entry : counts.entrySet()) {
 
-                HashMap typeMap = (HashMap) lastMap.get(Class.forName(t.getTypeName()));
-                if (typeMap == null) {
-                    typeMap = new HashMap();
-                }
+			// only do conflicts
+			if (entry.getValue() < 2)
+				continue;
 
-                lastMap.put(Class.forName(t.getTypeName()), typeMap);
-                lastMap = typeMap;
-            }
-        }
-    }
+			List<Method> methods = Stream.of(clazz.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
+					.collect(Collectors.toList());
 
-    static private class Node {
-        HashMap lastMap;
-        int lastIndex;
-        Node prevNode;
-    }
+			// build the type tree
+			for (Method m : methods) {
+				TypeNode tree = typeTree.get(entry.getKey());
+				if (tree == null)
+					tree = new TypeNode();
 
-    public static String mixTest(Object... args) throws InvocationTargetException, IllegalAccessException {
+				TypeNode curNode = null;
+				for(Type type : m.getGenericParameterTypes()) {
 
-        HashMap lastMap = myMap;
-        Method resultedMethod = null;
-        Node lastNode = null;
-        int mapsEncontred = 0;
-        List<Integer> argsInvokeOrder = new ArrayList<>();
+					// first iteration always enters here
+					if (curNode == null)
+						curNode = tree.getTypeNode(type);
 
-        for (int i = 0; i < args.length; i++) {
+					// init root node or add a new one to existing
+					TypeNode newNode = new TypeNode(type);
+					if (curNode == null) {
+						tree.addNode(newNode);
+						curNode = newNode;
+						continue;
+					} else {
+						if (!curNode.hasType(type))
+							curNode.addNode(newNode);
+					}
+					curNode = curNode.getTypeNode(type);
+				}
 
-            Object arg = args[i];
+				// Register the tree
+				typeTree.put(entry.getKey(), tree);
+			}
+		}
 
-            if (argsInvokeOrder.contains(i)) {
-                continue;
-            }
+		Color[] colors = { new Red(), new Yellow(), new Blue() };
+		for (Color c1 : colors)
+			for (Color c2 : colors) {
+				typeTree.get( c1.getClass());
+			}
+	}
 
-            if (mapsEncontred == args.length - 1) {
-
-                Method method = (Method) lastMap.get(arg.getClass());
-                if (method != null) {
-                    resultedMethod = method;
-                    argsInvokeOrder.add(i);
-                    break;
-                }
-
-            } else {
-                HashMap argMap = (HashMap) lastMap.get(arg.getClass());
-                if (argMap != null) {
-
-                    Node node = new Node();
-                    node.lastIndex = i;
-                    node.lastMap = lastMap;
-                    node.prevNode = lastNode;
-                    lastNode = node;
-                    lastMap = argMap;
-                    argsInvokeOrder.add(i);
-                    mapsEncontred++;
-                    i = -1;
-                    continue;
-
-                }
-
-            }
-
-            if (i == args.length - 1) {
-                lastMap = lastNode.lastMap;
-                i = lastNode.lastIndex;
-                mapsEncontred--;
-                for (int j = 0; j < argsInvokeOrder.size(); j++) {
-                    if (argsInvokeOrder.get(j) == lastNode.lastIndex) {
-                        argsInvokeOrder.remove(j);
-                        break;
-                    }
-                }
-
-                lastNode = lastNode.prevNode;
-            }
-
-        }
-
-        Object[] argumentsToInvoke = new Object[argsInvokeOrder.size()];
-
-        for (int i = 0; i < argsInvokeOrder.size(); i++) {
-            int index = argsInvokeOrder.get(i);
-            argumentsToInvoke[i] = args[index];
-        }
-
-        return (String) resultedMethod.invoke(null, argumentsToInvoke);
-
-    }
-
-    // end test stuff
 }
