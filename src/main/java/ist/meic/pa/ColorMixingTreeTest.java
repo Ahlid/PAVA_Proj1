@@ -49,8 +49,12 @@ public class ColorMixingTreeTest {
 			// build the type tree
 			for (Method m : methods) {
 				TypeNode tree = typeTree.get(entry.getKey());
-				if (tree == null)
+				
+				// if the tree doesnt exist for this method just init it
+				if (tree == null) {
 					tree = new TypeNode();
+					typeTree.put(entry.getKey(), tree);
+				}
 
 				TypeNode curNode = null;
 				for(Type type : m.getGenericParameterTypes()) {
@@ -58,30 +62,23 @@ public class ColorMixingTreeTest {
 
 					// first iteration always enters here
 					if (curNode == null)
-						curNode = tree.getTypeNode(c);
+						curNode = tree.getRoot();
 
 					// init root node or add a new one to existing
-					TypeNode newNode = new TypeNode(c);
-					if (curNode == null) {
-						tree.addNode(newNode);
-						curNode = newNode;
-						continue;
-					} else {
-						if (!curNode.hasType(c))
-							curNode.addNode(newNode);
-					}
+					if (!curNode.hasType(c))
+						curNode.addNode(new TypeNode(c));
 					curNode = curNode.getTypeNode(c);
 				}
 
-				// Register the tree
-				typeTree.put(entry.getKey(), tree);
 			}
 		}
 
 		Color[] colors = { new Red(), new Yellow(), new Blue() };
 		for (Color c1 : colors)
 			for (Color c2 : colors) {
-				typeTree.get("mix").getTypeNode(c1.getClass()).getTypeNode(c2.getClass());
+				TypeNode node = typeTree.get("mix").getRoot().getTypeNode(c1.getClass()).getTypeNode(c2.getClass());
+				if (node != null)
+					System.out.println(node.generateArgumentArray());
 			}
 	}
 

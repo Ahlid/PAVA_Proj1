@@ -20,6 +20,13 @@ public class TypeNode {
 	public TypeNode(Class<? extends Object> clazz) {
 		this.clazz = clazz;
 	}
+	
+	public TypeNode getRoot() {
+		if (isRoot())
+			return this;
+		else
+			return getParent().getRoot();
+	}
 
 	public boolean isRoot() {
 		return root;
