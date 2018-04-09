@@ -36,6 +36,10 @@ public class TypeNode {
 		return children.isEmpty();
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public List<Class<? extends Object>> generateArgumentArray() {
 		List<Class<? extends Object>> classes = new ArrayList<Class<? extends Object>>();
 
