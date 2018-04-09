@@ -9,15 +9,15 @@ import java.util.Map;
 public class TypeNode {
 
 	private boolean root = false;
-	private Class<? extends Object> clazz;
+	private Class<?> clazz;
 	private TypeNode parentNode;
-	private Map<Class<? extends Object>, TypeNode> children = new HashMap<Class<? extends Object>, TypeNode>();
+	private Map<Class<?>, TypeNode> children = new HashMap<>();
 
 	public TypeNode() {
 		this.root = true;
 	}
 
-	public TypeNode(Class<? extends Object> clazz) {
+	public TypeNode(Class<?> clazz) {
 		this.clazz = clazz;
 	}
 	
@@ -40,8 +40,8 @@ public class TypeNode {
 	 * 
 	 * @return
 	 */
-	public List<Class<? extends Object>> generateArgumentArray() {
-		List<Class<? extends Object>> classes = new ArrayList<Class<? extends Object>>();
+	public List<Class<?>> generateArgumentArray() {
+		List<Class<?>> classes = new ArrayList<>();
 
 		TypeNode tn = this;
 		while (!tn.isRoot()) {
@@ -53,7 +53,7 @@ public class TypeNode {
 		return classes;
 	}
 
-	public Class<? extends Object> getMappedType() {
+	public Class<?> getMappedType() {
 		return clazz;
 	}
 
@@ -69,11 +69,11 @@ public class TypeNode {
 		return parentNode != null;
 	}
 
-	public TypeNode getTypeNode(Class<? extends Object> clazz) {
+	public TypeNode getTypeNode(Class<?> clazz) {
 		return children.get(clazz);
 	}
 
-	public boolean hasType(Class<? extends Object> clazz) {
+	public boolean hasType(Class<?> clazz) {
 		return children.containsKey(clazz);
 	}
 

@@ -1,5 +1,6 @@
 package ist.meic.pa;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -13,24 +14,63 @@ import ist.meic.pa.GenericFunctions.structure.TypeNode;
 
 public class ColorMixingTreeTest {
 
-	public static void main(String[] args) throws ClassNotFoundException {
+	public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		prepare(Color.class);
 	}
 
-	public static void prepare(Class clazz) throws ClassNotFoundException {
+	static Map<String, TypeNode> typeTree;
+	public static void prepare(Class clazz) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		// Find name conflicts
 		Map<String, Integer> counts = getConflicts(clazz);
 
 		// Map types
-		Map<String, TypeNode> typeTree = generateTypeTree(clazz, counts);
+		typeTree = generateTypeTree(clazz, counts);
 
 		Color[] colors = { new Red(), new Yellow(), new Blue() };
 		for (Color c1 : colors)
 			for (Color c2 : colors) {
-				TypeNode node = typeTree.get("mix").getRoot().getTypeNode(c1.getClass()).getTypeNode(c2.getClass());
-				if (node != null)
-					System.out.println(node.generateArgumentArray());
+				Method m = findBest("mix", c1.getClass(), c2.getClass());
+				if (m != null)
+					System.out.println(m.invoke(Color.class, c1, c2));
 			}
+	}
+	
+	/**
+	 * Find the best suited method from the type tree
+	 * @param class2 
+	 * @param class1 
+	 * @param methodName
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 */
+	private static Method findBest(String methodName, Class<? extends Object> ... classes) throws NoSuchMethodException, SecurityException {
+		TypeNode root = typeTree.get(methodName);
+		if (root == null)
+			return null;
+		
+		return _findBest(root, classes);
+	}
+		
+	private static Method _findBest(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
+		Method ret = null;
+		for (int i = 0; i < classes.length; i++) {
+			try {
+				TypeNode tempRoot = root;
+				for (Class c : classes)
+					tempRoot = tempRoot.getTypeNode(c);
+				
+				List<Class<?>> args = tempRoot.generateArgumentArray();
+				Class<?>[] array = new Class[args.size()];
+				return Color.class.getMethod("mix", tempRoot.generateArgumentArray().toArray(array));
+			} catch (NullPointerException e) {
+				classes[i] = classes[i].getSuperclass();
+				if (classes[i] == null) return null;
+				Method m = _findBest(root, classes);
+				if (m != null)
+					return m;
+			}
+		}
+		return ret;
 	}
 
 	/**
