@@ -9,15 +9,26 @@ import java.util.List;
 
 public class ColorMixingTest {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
         Color[] colors = {new Red(), new Yellow(), new Blue()};
 
-        for (Color c1 : colors)
+
+      /*  for (Method m : Color.class.getDeclaredMethods()) {
+            for (Type t : m.getGenericParameterTypes()) {
+                System.out.println(t.getTypeName());
+            }
+        }
+        */
+
+        int x = 1;
+
+
+    /*    for (Color c1 : colors)
             for (Color c2 : colors) {
                 String out = Color.mix(c1, c2);
                 System.out.println(String.format("%s + %s = %s", c1.getClass().getSimpleName(),
                         c2.getClass().getSimpleName(), out));
-            }
+            }*/
     }
 
     // test stuff
