@@ -29,13 +29,20 @@ public class ColorMixingTreeTest {
         typeTree = generateTypeTree(clazz, counts);
 
         Color[] colors = {new Red(), new Yellow(), new Blue()};
-        for (Color c1 : colors)
+
+        Method m = findBest("mix", Red.class, Yellow.class, Blue.class);
+        if (m != null)
+            System.out.println(m.invoke(Color.class, new Red(), new Yellow(), new Blue()));
+        else
+            System.out.println("null");
+
+      /*  for (Color c1 : colors)
             for (Color c2 : colors) {
                 Method m = findBest("mix", c1.getClass(), c2.getClass());
                 if (m != null)
                     System.out.println(m.invoke(Color.class, c1, c2));
             }
-
+*/
     }
 
     /**
@@ -51,10 +58,10 @@ public class ColorMixingTreeTest {
         if (root == null)
             return null;
 
-        return _findBest(root, classes);
+        return _findBest(root, classes, classes);
     }
 
-    private static Method _findBest(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
+    private static Method _findBest(TypeNode root, Class<?>[] classes, Class<?>[] startedClasses) throws NoSuchMethodException, SecurityException {
 
         Method ret = null;
         Class[] currentClassesArgs = classes.clone();
@@ -73,45 +80,45 @@ public class ColorMixingTreeTest {
             //chegamos ao fim, vamos começar a chamar superclasses
         } catch (Exception e) {
 
-            //vamos atribuir a superclass ao ultimo alrgumento
+            //vamos atribuir a superclass ao ultimo argumento
             currentClassesArgs[currentClassesArgs.length - 1] = currentClassesArgs[currentClassesArgs.length - 1].getSuperclass();
 
-            //vamos verificar se é null em algum dos args
-            for (int i = currentClassesArgs.length - 1; i >= 0; i--) {
+            boolean rebase = false;
 
-                //se a class é null então voltamos ao inicio e chamamos a superclass do argumento anterior
-                if (currentClassesArgs[i] == null) {
-                    currentClassesArgs[i] = classes[i];
+            for (int i = 0; i < currentClassesArgs.length; i++) {
+
+                Class clazz = currentClassesArgs[i];
+
+
+                if (rebase) {
+                    currentClassesArgs[i] = startedClasses[i];
+                } else if (clazz == null) {
+
+                    //temos de chamar a superclasse do argumento anterior
+
+                    //se não existe argumento anterior não existe metodo
                     if (i == 0) {
                         return null;
+                    } else {
+
+                        //atribuir a superclasse ao argumento anterior a este
+                        currentClassesArgs[i - 1] = currentClassesArgs[i - 1].getSuperclass();
+
+                        //todos os seguintes argumentos devem passar para a classe inicial
+                        currentClassesArgs[i] = startedClasses[i];
+                        rebase = true;
+
                     }
-                    currentClassesArgs[i - 1] = classes[i - 1].getSuperclass();
+
                 }
+
             }
-            for (Class c : currentClassesArgs)
-                System.out.print(c + "");
-            System.out.println();
+
+
+            return _findBest(root, currentClassesArgs, startedClasses);
+
 
         }
-
-       /* for (int i = 0; i < classes.length; i++) {
-            try {
-                TypeNode tempRoot = root;
-                for (Class c : classes)
-                    tempRoot = tempRoot.getTypeNode(c);
-
-                List<Class<?>> args = tempRoot.generateArgumentArray();
-                Class<?>[] array = new Class[args.size()];
-                return Color.class.getMethod("mix", tempRoot.generateArgumentArray().toArray(array));
-            } catch (NullPointerException e) {
-                classes[i] = classes[i].getSuperclass();
-                if (classes[i] == null) return null;
-                Method m = _findBest(root, classes);
-                if (m != null)
-                    return m;
-            }
-        }
-        return ret;*/
 
         return ret;
     }
