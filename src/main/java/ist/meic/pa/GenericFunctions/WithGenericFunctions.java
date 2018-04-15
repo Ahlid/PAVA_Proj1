@@ -54,11 +54,15 @@ public class WithGenericFunctions {
         classLoader.run(name, args);
     }
 
-    public static HashMap<String, TypeNode> getTypeTree(Class clazz) throws ClassNotFoundException {
+    public static HashMap<String, TypeNode> getTypeTree(Class clazz) {
         Map<String, Integer> counts = getConflicts(clazz);
 
         // Map types
-        return generateTypeTree(clazz, counts);
+        try {
+            return generateTypeTree(clazz, counts);
+        } catch (ClassNotFoundException e) {
+            return new HashMap<>();
+        }
     }
 
     private static HashMap<String, TypeNode> generateTypeTree(Class clazz, Map<String, Integer> counts)

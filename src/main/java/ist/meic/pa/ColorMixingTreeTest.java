@@ -29,12 +29,19 @@ public class ColorMixingTreeTest {
         typeTree = generateTypeTree(clazz, counts);
         */
 
+
+        Object[] objs = new Object[]{"Hello", 1, 2.0};
+        for (Object o : objs) {
+            Explain.it(o);
+        }
+
+/*
         Color[] colors = {new Red(), new Yellow(), new Blue()};
 
         for (Color c1 : colors)
             for (Color c2 : colors) {
                 System.out.println(Color.mix(c1, c2));
-            }
+            }*/
 
     }
 

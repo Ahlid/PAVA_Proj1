@@ -23,11 +23,9 @@ class Color {
     public static String mix(Object... args) {
 
         if (typeTree == null) {
-            try {
-                typeTree = WithGenericFunctions.getTypeTree(Color.class);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+
+            typeTree = WithGenericFunctions.getTypeTree(Color.class);
+
         }
 
         TypeNode root = typeTree.get("_mix");
