@@ -63,7 +63,9 @@ public class WithGenericFunctions {
 
     private static HashMap<String, TypeNode> generateTypeTree(Class clazz, Map<String, Integer> counts)
             throws ClassNotFoundException {
+
         HashMap<String, TypeNode> typeTree = new HashMap<String, TypeNode>();
+
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
 
             // only do conflicts
@@ -76,8 +78,6 @@ public class WithGenericFunctions {
             // build the type tree
             for (Method m : methods) {
 
-                System.out.println(m.getAnnotations().length);
-
                 TypeNode tree = typeTree.get(entry.getKey());
 
                 // if the tree doesnt exist for this method just init it
@@ -85,6 +85,27 @@ public class WithGenericFunctions {
                     tree = new TypeNode();
                     typeTree.put(entry.getKey(), tree);
                 }
+
+                //the tree for the BeforeMethod
+                if (m.getAnnotation(BeforeMethod.class) != null) {
+                    if (typeTree.containsKey(entry.getKey() + "@BeforeMethod")) {
+                        tree = typeTree.get(entry.getKey() + "@BeforeMethod");
+                    } else {
+                        tree = new TypeNode();
+                        typeTree.put(entry.getKey() + "@BeforeMethod", tree);
+                    }
+                }
+
+                //the tree for the AfterMethod
+                if (m.getAnnotation(AfterMethod.class) != null) {
+                    if (typeTree.containsKey(entry.getKey() + "@AfterMethod")) {
+                        tree = typeTree.get(entry.getKey() + "@AfterMethod");
+                    } else {
+                        tree = new TypeNode();
+                        typeTree.put(entry.getKey() + "@AfterMethod", tree);
+                    }
+                }
+
 
                 TypeNode curNode = null;
                 for (Type type : m.getGenericParameterTypes()) {

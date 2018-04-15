@@ -1,5 +1,7 @@
 package ist.meic.pa;
 
+import ist.meic.pa.GenericFunctions.AfterMethod;
+import ist.meic.pa.GenericFunctions.BeforeMethod;
 import ist.meic.pa.GenericFunctions.GenericFunction;
 import ist.meic.pa.GenericFunctions.WithGenericFunctions;
 import ist.meic.pa.GenericFunctions.structure.TypeNode;
@@ -29,6 +31,8 @@ class Color {
         }
 
         TypeNode root = typeTree.get("_mix");
+        TypeNode beforeRoot = typeTree.get("_mix@BeforeMethod");
+        TypeNode afterRoot = typeTree.get("_mix@AfterMethod");
 
         Class[] classes = new Class[args.length];
 
@@ -37,10 +41,21 @@ class Color {
         }
 
 
-
         try {
+
+            Method beforeMethod = WithGenericFunctions.findBest(beforeRoot, classes, classes);
+            if (beforeMethod != null)
+                beforeMethod.invoke(Color.class, args);
+
             Method method = WithGenericFunctions.findBest(root, classes, classes);
-            return (String) method.invoke(Color.class, args);
+            String result = (String) method.invoke(Color.class, args);
+
+            Method afterMethod = WithGenericFunctions.findBest(afterRoot, classes, classes);
+            if (afterMethod != null)
+                afterMethod.invoke(Color.class, args);
+
+            return result;
+
         } catch (Exception e) {
             return null;
         }
@@ -81,6 +96,16 @@ class Color {
 
     public static String _mix(Blue c1, Yellow c2) {
         return "Green";
+    }
+
+    @BeforeMethod
+    public static void _mix(Color c1, Blue c2) {
+        System.out.print("Here comes a blue: ");
+    }
+
+    @AfterMethod
+    public static void _mix(Object c1, Blue c2) {
+        System.out.print(" ---> result of mixing blue");
     }
 
 }
