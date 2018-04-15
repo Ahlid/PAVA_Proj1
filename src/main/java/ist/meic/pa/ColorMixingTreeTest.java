@@ -22,27 +22,20 @@ public class ColorMixingTreeTest {
     static Map<String, TypeNode> typeTree;
 
     public static void prepare(Class clazz) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-        // Find name conflicts
-        Map<String, Integer> counts = getConflicts(clazz);
+        /*Find name conflicts
+       // Map<String, Integer> counts = getConflicts(clazz);
 
         // Map types
         typeTree = generateTypeTree(clazz, counts);
+        */
 
         Color[] colors = {new Red(), new Yellow(), new Blue()};
 
-        Method m = findBest("mix", Red.class, Yellow.class, Blue.class);
-        if (m != null)
-            System.out.println(m.invoke(Color.class, new Red(), new Yellow(), new Blue()));
-        else
-            System.out.println("null");
-
-      /*  for (Color c1 : colors)
+        for (Color c1 : colors)
             for (Color c2 : colors) {
-                Method m = findBest("mix", c1.getClass(), c2.getClass());
-                if (m != null)
-                    System.out.println(m.invoke(Color.class, c1, c2));
+                System.out.println(Color.mix(c1, c2));
             }
-*/
+
     }
 
     /**
@@ -65,6 +58,12 @@ public class ColorMixingTreeTest {
 
         Method ret = null;
         Class[] currentClassesArgs = classes.clone();
+
+        for (Class c : currentClassesArgs) {
+            System.out.print(c + "-----------");
+        }
+        System.out.println();
+
 
         try {
 
