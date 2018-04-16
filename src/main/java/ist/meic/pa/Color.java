@@ -6,15 +6,13 @@ import ist.meic.pa.GenericFunctions.GenericFunction;
 import ist.meic.pa.GenericFunctions.WithGenericFunctions;
 import ist.meic.pa.GenericFunctions.structure.TypeNode;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-@GenericFunction
 class Color {
 
 
-    static Map<String, TypeNode> typeTree;
+    static Map<String, TypeNode> typeTree2;
 
     public static String _mix(Object c1, Object c2) {
         return "objects";
@@ -22,15 +20,15 @@ class Color {
 
     public static String mix(Object... args) {
 
-        if (typeTree == null) {
+        if (typeTree2 == null) {
 
-            typeTree = WithGenericFunctions.getTypeTree(Color.class);
+            typeTree2 = WithGenericFunctions.getTypeTree(Color.class);
 
         }
 
-        TypeNode root = typeTree.get("_mix");
-        TypeNode beforeRoot = typeTree.get("_mix@BeforeMethod");
-        TypeNode afterRoot = typeTree.get("_mix@AfterMethod");
+        TypeNode root = typeTree2.get("_mix");
+        TypeNode beforeRoot = typeTree2.get("_mix@BeforeMethod");
+        TypeNode afterRoot = typeTree2.get("_mix@AfterMethod");
 
         Class[] classes = new Class[args.length];
 

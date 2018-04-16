@@ -3,7 +3,6 @@ package ist.meic.pa.GenericFunctions;
 import ist.meic.pa.GenericFunctions.structure.TypeNode;
 import javassist.*;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -34,6 +33,9 @@ public class WithGenericFunctions {
             System.exit(-1);
         }
 
+        Object[] s = new Object[]{};
+
+
         String programName = args[0];
         String[] restArgs = new String[args.length - 1];
         System.arraycopy(args, 1, restArgs, 0, restArgs.length);
@@ -58,15 +60,18 @@ public class WithGenericFunctions {
         Map<String, Integer> counts = getConflicts(clazz);
 
         // Map types
+
         try {
             return generateTypeTree(clazz, counts);
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             return new HashMap<>();
         }
+
+
     }
 
-    private static HashMap<String, TypeNode> generateTypeTree(Class clazz, Map<String, Integer> counts)
-            throws ClassNotFoundException {
+    private static HashMap<String, TypeNode> generateTypeTree(Class clazz, Map<String, Integer> counts) throws ClassNotFoundException {
 
         HashMap<String, TypeNode> typeTree = new HashMap<String, TypeNode>();
 
@@ -75,6 +80,8 @@ public class WithGenericFunctions {
             // only do conflicts
             if (entry.getValue() < 2)
                 continue;
+
+
 
             List<Method> methods = Stream.of(clazz.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
                     .collect(Collectors.toList());
@@ -114,8 +121,14 @@ public class WithGenericFunctions {
                 TypeNode curNode = null;
                 for (Type type : m.getGenericParameterTypes()) {
 
-                    Class<? extends Object> c = Class.forName(type.getTypeName());
+                    Class<? extends Object> c = null;
+                    try {
+                        c = Class.forName(type.getTypeName());
+                    } catch (ClassNotFoundException e) {
 
+                        String newClassName = "[L" + type.getTypeName().substring(0, type.getTypeName().length() - 2).replace("/", ".") + ";";
+                        c = Class.forName(newClassName);
+                    }
                     // first iteration always enters here
                     if (curNode == null)
                         curNode = tree.getRoot();
@@ -133,7 +146,7 @@ public class WithGenericFunctions {
         return typeTree;
     }
 
-    private static HashMap<String, Integer> getConflicts(Class clazz) {
+    public static HashMap<String, Integer> getConflicts(Class clazz) {
         HashMap<String, Integer> counts = new HashMap<String, Integer>();
         for (Method m : clazz.getDeclaredMethods()) {
             Integer count = counts.get(m.getName());
@@ -210,6 +223,5 @@ public class WithGenericFunctions {
 
         return ret;
     }
-
 
 }

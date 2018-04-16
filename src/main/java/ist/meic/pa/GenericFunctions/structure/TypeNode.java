@@ -95,7 +95,6 @@ public class TypeNode {
         return children.size() == 0;
     }
 
-
     public String toStringChildren() {
 
 
