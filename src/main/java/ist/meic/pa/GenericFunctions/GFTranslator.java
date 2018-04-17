@@ -38,8 +38,6 @@ public class GFTranslator implements Translator {
     public void applyMultipleDispatch(CtClass ctClass, String className) throws InitializationException {
 
         try {
-
-
             Class clazz = Class.forName(className);
             Map<String, Integer> counts = WithGenericFunctions.getConflicts(clazz);
 
@@ -49,67 +47,66 @@ public class GFTranslator implements Translator {
                             " ist.meic.pa.GenericFunctions.WithGenericFunctions.getTypeTree(" + className + ".class);",
                     ctClass);
 
-
             ctField.setModifiers(Modifier.PUBLIC | Modifier.FINAL | Modifier.STATIC);
-
-           /* CtField ctField =
-                    CtField.make("static java.util.Hashtable cachedResults = " +
-                                    " new java.util.Hashtable();",
-                            ctClass);*/
-
-
             ctClass.addField(ctField);
 
             //check the methods to apply the genericFunction method
             for (Map.Entry<String, Integer> entry : counts.entrySet()) {
 
-                //if there is no conflit continue
+                //if there is no conflict continue
                 if (entry.getValue() < 2) {
                     continue;
                 }
 
-                //get the methtods
+                //get the methods
                 List<CtMethod> methods = Stream.of(ctClass.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
                         .collect(Collectors.toList());
 
-                String methodName = methods.get(0).getName();
-
                 //rename the methods
                 for (CtMethod ctMethod : methods) {
+//                	CtMethod proxy = generateProxy(ctMethod, ctClass);
                     ctMethod.setName(ctMethod.getName() + "$original");
+//                    ctClass.addMethod(proxy);
                 }
 
-                CtMethod aux = methods.get(0);
-
                 //add the new method
-                CtMethod ctMethod = CtMethod.make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "") + methods.get(0).getReturnType().getName() + " " + methodName + "(Object[] hmm){" +
-                        " return null;}", ctClass);
+				CtMethod ctMethod = CtMethod
+						.make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "")
+								+ methods.get(0).getReturnType().getName() + " " + entry.getKey() + "(Object[] hmm){"
+								+ " return null;}", ctClass);
                 ctMethod.setBody(getInjectedCode(entry.getKey(), className, Modifier.isStatic(methods.get(0).getModifiers())));
-                //ctMethod.setModifiers(aux.getModifiers());
                 ctClass.addMethod(ctMethod);
-
-
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new InitializationException("Class " + className + " was not able to make generic.");
         }
-
-        try {
-            ctClass.writeFile("C:\\Users\\tiago\\Documents\\PAVA_Proj1\\ist\\class" + className + ".java");
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
     }
 
+    /**
+     * Generate a method that redirects the call to a generic function
+     * @throws CannotCompileException 
+     * @throws NotFoundException 
+     */
+    private CtMethod generateProxy(CtMethod ctMethod, CtClass ctClass) throws NotFoundException, CannotCompileException {
+    	CtMethod methodProxy = new CtMethod(ctMethod.getReturnType(), ctMethod.getName(), ctMethod.getParameterTypes(), ctClass);
+        methodProxy.setModifiers(ctMethod.getModifiers());
+        
+        StringBuilder sb = new StringBuilder("{ return ");
+        	
+        if (javassist.Modifier.isStatic(ctMethod.getModifiers()))
+        	sb.append(String.format("%s.%s.", ctClass.getPackageName(), ctClass.getSimpleName()));
+        sb.append(String.format("%s(new Object[] {$$});", ctMethod.getName()));
+        sb.append("}");
+        methodProxy.setBody(sb.toString());
+        
+        return methodProxy;
+	}
 
-    private String getInjectedCode(String name, String className, boolean isStatic) {
+	private String getInjectedCode(String name, String className, boolean isStatic) {
 
+    	
+    	
         return "{\n" +
                 "\n" +
                 "        ist.meic.pa.GenericFunctions.structure.TypeNode root = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original\");\n" +
