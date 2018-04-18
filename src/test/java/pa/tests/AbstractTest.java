@@ -1,7 +1,6 @@
 package pa.tests;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -21,14 +19,22 @@ public class AbstractTest {
 	public void captureStdout() throws FileNotFoundException {
 		System.setOut(new PrintStream(new File(temp.getRoot(), "temp.log")));
 	}
-	
+
 	//@After
-	public void validateOut(String testName) {
+	public void validateOut(String testName) throws Exception {
 		File expectedOut = new File("src/test/resources/", testName + ".out");
-		if (expectedOut.exists()) {
-			String got = dumpFile(new File(temp.getRoot(), "temp.log"));
-			String expected = dumpFile(expectedOut);
-			assertEquals(expected, got);
+		String got = null;
+		String expected = null;
+		try {
+			if (expectedOut.exists()) {
+				got = dumpFile(new File(temp.getRoot(), "temp.log"));
+				expected = dumpFile(expectedOut);
+				assertEquals(expected, got);
+			}
+		} catch (AssertionError e) {
+			throw new Exception(String.format(
+					"\n---- got ----\n%s---------"
+				  + "---- expected ----\n%s---------\n%s", got, expected, e.getMessage()));
 		}
 	}
 
@@ -56,5 +62,5 @@ public class AbstractTest {
 	    }
 		return null;
 	}
-	
+
 }

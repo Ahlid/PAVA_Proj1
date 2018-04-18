@@ -9,10 +9,12 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ist.meic.pa.GenericFunctions.WithGenericFunctions;
+
 public class TestK  extends AbstractTest{
 	@Test
-	public void doTest() {
-		TestK.main(null);
+	public void doTest() throws Throwable {
+		WithGenericFunctions.main(new String[] { "pa.tests.TestK"});
 		validateOut("K");
 	}
     public static void main(String[] args) {

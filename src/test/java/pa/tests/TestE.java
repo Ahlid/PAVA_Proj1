@@ -2,12 +2,13 @@ package pa.tests;
 
 import org.junit.Test;
 
+import ist.meic.pa.GenericFunctions.WithGenericFunctions;
 import pa.tests.domain.Identify;
 
 public class TestE  extends AbstractTest{
 	@Test
-	public void doTest() {
-		TestE.main(null);
+	public void doTest() throws Throwable {
+		WithGenericFunctions.main(new String[] { "pa.tests.TestE"});
 		validateOut("E");
 	}
     public static void main(String[] args) {

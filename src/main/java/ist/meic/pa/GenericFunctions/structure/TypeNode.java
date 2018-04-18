@@ -96,13 +96,9 @@ public class TypeNode {
     }
 
     public String toStringChildren() {
-
-
         String s = "";
         for (TypeNode n : this.children.values()) {
-
             s += n + ",";
-
         }
         return s;
     }
