@@ -82,10 +82,10 @@ public class GFTranslator implements Translator {
                 CtMethod aux = methods.get(0);
 
                 //add the new method
-                CtMethod ctMethod = CtMethod.make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "") + methods.get(0).getReturnType().getName() + " " + methodName + "(Object[] hmm){" +
+                CtMethod ctMethod = CtMethod.make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "") + "Object" + " " + methodName + "(Object[] hmm){" +
                         " return null;}", ctClass);
                 ctMethod.setBody(getInjectedCode(entry.getKey(), className, Modifier.isStatic(methods.get(0).getModifiers())));
-                //ctMethod.setModifiers(aux.getModifiers());
+                ctMethod.setModifiers(aux.getModifiers() | Modifier.TRANSIENT);
                 ctClass.addMethod(ctMethod);
 
 
@@ -137,7 +137,7 @@ public class GFTranslator implements Translator {
                 "            if (afterMethod != null)\n" +
                 "                afterMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
                 "\n" +
-                "            return ($r) result;\n" +
+                "            return result;\n" +
                 "\n" +
                 "        } catch (Exception e) {\n" +
                 "            return null;\n" +

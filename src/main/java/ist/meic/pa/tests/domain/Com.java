@@ -15,12 +15,12 @@ public interface Com {
     public static Integer bine(Integer a) { return a; }
     public static Object bine(Object[] arr) {
         String res = "";
-        for (Object o : arr) res += bine(o);
+        for (Object o : arr) res += bine(new Object[]{o});
         return res;
     }
     public static Object bine(Integer[] arr) {
         int res = 0;
-        for (int o : arr) res += bine(o);
+        for (int o : arr) res += (Integer) bine(new Object[]{o});
         return res;
     }
 

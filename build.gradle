@@ -24,5 +24,5 @@ dependencies {
 
 run {
     standardInput = System.in
-    args = ["ist.meic.pa.tests.TestC"]
+    args = ["ist.meic.pa.tests.TestD"]
 }
