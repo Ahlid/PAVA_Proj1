@@ -82,7 +82,6 @@ public class WithGenericFunctions {
                 continue;
 
 
-
             List<Method> methods = Stream.of(clazz.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
                     .collect(Collectors.toList());
 
@@ -143,6 +142,8 @@ public class WithGenericFunctions {
 
             }
         }
+
+       // System.out.println(typeTree);
         return typeTree;
     }
 
@@ -160,13 +161,13 @@ public class WithGenericFunctions {
         Method ret = null;
         Class[] currentClassesArgs = classes.clone();
 
-        /*
+/*
         for (Class c : currentClassesArgs) {
             System.out.print(c + "-----------");
         }
         System.out.println();
-*/
 
+*/
         try {
 
             TypeNode tempRoot = root;

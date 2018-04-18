@@ -12,10 +12,10 @@ public class TestA {
         Method[] methods = Color.class.getDeclaredMethods();
 
         for (Method m : methods) {
-          //  System.out.println(m);
+            //  System.out.println(m);
         }
 
-        for (Color c : colors) System.out.println(Color.mix(new Object[]{c}));
+        for (Color c : colors) System.out.println(Color.mix(c));
     }
 
 }

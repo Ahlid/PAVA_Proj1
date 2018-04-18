@@ -2,25 +2,22 @@ package ist.meic.pa.tests.domain;
 
 import ist.meic.pa.GenericFunctions.GenericFunction;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
 
 @GenericFunction
 public interface Com {
     // Test B and D
-
     public static Object bine(Object a) { return "Object";}
     public static String bine(String a) { return a; }
     public static Integer bine(Integer a) { return a; }
     public static Object bine(Object[] arr) {
         String res = "";
-        for (Object o : arr) res += bine(new Object[]{o});
+        for (Object o : arr) res += bine(o);
         return res;
     }
     public static Object bine(Integer[] arr) {
         int res = 0;
-        for (int o : arr) res += (Integer) bine(new Object[]{o});
+        for (int o : arr) res += bine(o);
         return res;
     }
 

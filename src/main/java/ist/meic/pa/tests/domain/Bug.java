@@ -1,12 +1,6 @@
 package ist.meic.pa.tests.domain;
 
-import ist.meic.pa.GenericFunctions.AfterMethod;
-import ist.meic.pa.GenericFunctions.BeforeMethod;
 import ist.meic.pa.GenericFunctions.GenericFunction;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @GenericFunction
 public class Bug {

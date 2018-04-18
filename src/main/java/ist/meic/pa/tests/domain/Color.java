@@ -11,7 +11,7 @@ public class Color {
     public static String mix(Red c1) { return "Red"; }
     public static String mix(Object[] arr) {
         String res = "";
-        for (Object o : arr) res += mix(new Object[]{o});
+        for (Object o : arr) res += mix(o);
         return res;
     }
 

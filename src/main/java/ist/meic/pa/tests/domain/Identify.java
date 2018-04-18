@@ -1,11 +1,6 @@
 package ist.meic.pa.tests.domain;
 
-import ist.meic.pa.GenericFunctions.AfterMethod;
-import ist.meic.pa.GenericFunctions.BeforeMethod;
 import ist.meic.pa.GenericFunctions.GenericFunction;
-
-import java.awt.print.Book;
-import java.io.Reader;
 
 @GenericFunction
 public class Identify {

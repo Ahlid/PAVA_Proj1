@@ -62,20 +62,33 @@ public class GFTranslator implements Translator {
                 List<CtMethod> methods = Stream.of(ctClass.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
                         .collect(Collectors.toList());
 
-                //rename the methods
-                for (CtMethod ctMethod : methods) {
-//                	CtMethod proxy = generateProxy(ctMethod, ctClass);
-                    ctMethod.setName(ctMethod.getName() + "$original");
-//                    ctClass.addMethod(proxy);
-                }
 
                 //add the new method
-				CtMethod ctMethod = CtMethod
-						.make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "")
-								+ methods.get(0).getReturnType().getName() + " " + entry.getKey() + "(Object[] hmm){"
-								+ " return null;}", ctClass);
-                ctMethod.setBody(getInjectedCode(entry.getKey(), className, Modifier.isStatic(methods.get(0).getModifiers())));
-                ctClass.addMethod(ctMethod);
+                CtMethod ctMethodC = CtMethod
+                        .make("public " + (Modifier.isStatic(methods.get(0).getModifiers()) ? "static " : "")
+                                + "Object" + " " + entry.getKey() + "$dispatcher" + "(Object[] hmm){"
+                                + " return null;}", ctClass);
+                ctMethodC.setBody(getInjectedCode(entry.getKey(), className, Modifier.isStatic(methods.get(0).getModifiers())));
+
+                ctMethodC.setModifiers(methods.get(0).getModifiers() | Modifier.TRANSIENT);
+                ctClass.addMethod(ctMethodC);
+
+                //rename the methods
+                for (CtMethod ctMethod : methods) {
+                    ctMethod.setName(ctMethod.getName() + "$original");
+                }
+
+                for (CtMethod ctMethod : methods) {
+                    CtMethod proxy = generateProxy(ctMethod, ctClass, entry.getKey());
+                    ctClass.addMethod(proxy);
+                }
+
+            }
+
+            try {
+                ctClass.writeFile("C:\\Users\\tiago\\Documents\\PAVA_Proj1\\ist\\class" + className + ".java");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,34 +98,38 @@ public class GFTranslator implements Translator {
 
     /**
      * Generate a method that redirects the call to a generic function
-     * @throws CannotCompileException 
-     * @throws NotFoundException 
+     *
+     * @throws CannotCompileException
+     * @throws NotFoundException
      */
-    private CtMethod generateProxy(CtMethod ctMethod, CtClass ctClass) throws NotFoundException, CannotCompileException {
-    	CtMethod methodProxy = new CtMethod(ctMethod.getReturnType(), ctMethod.getName(), ctMethod.getParameterTypes(), ctClass);
+    private CtMethod generateProxy(CtMethod ctMethod, CtClass ctClass, String name) throws NotFoundException, CannotCompileException {
+
+
+        CtMethod methodProxy = new CtMethod(ctMethod.getReturnType(), name, ctMethod.getParameterTypes(), ctClass);
         methodProxy.setModifiers(ctMethod.getModifiers());
-        
-        StringBuilder sb = new StringBuilder("{ return ");
-        	
+
+        StringBuilder sb = new StringBuilder("{ return ($r)");
+
         if (javassist.Modifier.isStatic(ctMethod.getModifiers()))
-        	sb.append(String.format("%s.%s.", ctClass.getPackageName(), ctClass.getSimpleName()));
-        sb.append(String.format("%s(new Object[] {$$});", ctMethod.getName()));
+            sb.append(String.format("%s.%s.", ctClass.getPackageName(), ctClass.getSimpleName()));
+        sb.append(String.format("%s($args);", name + "$dispatcher"));
         sb.append("}");
+
         methodProxy.setBody(sb.toString());
-        
+
         return methodProxy;
-	}
+    }
 
-	private String getInjectedCode(String name, String className, boolean isStatic) {
+    private String getInjectedCode(String name, String className, boolean isStatic) {
 
-    	
-    	
+
         return "{\n" +
                 "\n" +
                 "        ist.meic.pa.GenericFunctions.structure.TypeNode root = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original\");\n" +
                 "        ist.meic.pa.GenericFunctions.structure.TypeNode beforeRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@BeforeMethod\");\n" +
                 "       ist.meic.pa.GenericFunctions.structure.TypeNode afterRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@AfterMethod\");\n" +
                 "\n" +
+               // "System.out.println($1[0]); " +
                 "        Class[] classes = new Class[$1.length];\n" +
                 "\n" +
                 "        for (int i = 0; i < $1.length; i++) {\n" +
@@ -127,9 +144,9 @@ public class GFTranslator implements Translator {
                 "                beforeMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
                 "\n" +
                 "            java.lang.reflect.Method method = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(root, classes, classes);\n" +
-                " System.out.println(method);\n" +
+                //" System.out.println($1);\n" +
                 "            Object result =  method.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
-                " System.out.println(method);\n" +
+                // " System.out.println(method);\n" +
                 "            java.lang.reflect.Method afterMethod = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(afterRoot, classes, classes);\n" +
                 "            if (afterMethod != null)\n" +
                 "                afterMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
