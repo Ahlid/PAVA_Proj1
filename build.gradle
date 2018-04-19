@@ -24,6 +24,10 @@ dependencies {
     compile 'junit:junit:4.12'
 }
 
+configurations {
+	jar.archiveName="genericFunctions.jar"
+}
+
 run {
     standardInput = System.in
     args = ["ist.meic.pa.tests.TestP"]
