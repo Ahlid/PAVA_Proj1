@@ -82,9 +82,7 @@ public class GFTranslator implements Translator {
                     CtMethod proxy = generateProxy(ctMethod, ctClass, entry.getKey());
                     ctClass.addMethod(proxy);
                 }
-
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new InitializationException("Class " + className + " was not able to make generic.");
@@ -117,14 +115,12 @@ public class GFTranslator implements Translator {
 
     private String getInjectedCode(String name, String className, boolean isStatic) {
 
-
         return "{\n" +
                 "\n" +
                 "        ist.meic.pa.GenericFunctions.structure.TypeNode root = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original\");\n" +
                 "        ist.meic.pa.GenericFunctions.structure.TypeNode beforeRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@BeforeMethod\");\n" +
-                "       ist.meic.pa.GenericFunctions.structure.TypeNode afterRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@AfterMethod\");\n" +
+                "        ist.meic.pa.GenericFunctions.structure.TypeNode afterRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@AfterMethod\");\n" +
                 "\n" +
-               // "System.out.println($1[0]); " +
                 "        Class[] classes = new Class[$1.length];\n" +
                 "\n" +
                 "        for (int i = 0; i < $1.length; i++) {\n" +
@@ -134,17 +130,19 @@ public class GFTranslator implements Translator {
                 "\n" +
                 "        try {\n" +
                 "\n" +
-                "            java.lang.reflect.Method beforeMethod = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(beforeRoot, classes, classes);\n" +
-                "            if (beforeMethod != null)\n" +
-                "                beforeMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "            java.lang.reflect.Method[] beforeMethods = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBeforeHooks(beforeRoot, classes);\n" +
+                "            if (beforeMethods != null)\n" +
+                "                for (int i = 0; i < beforeMethods.length; i++) {\n" +
+                "                	beforeMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
                 "\n" +
                 "            java.lang.reflect.Method method = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(root, classes, classes);\n" +
-                //" System.out.println($1);\n" +
                 "            Object result =  method.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
-                // " System.out.println(method);\n" +
-                "            java.lang.reflect.Method afterMethod = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(afterRoot, classes, classes);\n" +
-                "            if (afterMethod != null)\n" +
-                "                afterMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "             java.lang.reflect.Method[] afterMethods = ist.meic.pa.GenericFunctions.WithGenericFunctions.findAfterHooks(afterRoot, classes);\n" +
+                "            if (afterMethods != null)\n" +
+                "                for (int i = 0; i < afterMethods.length; i++) {\n" +
+                "                	afterMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
                 "\n" +
                 "            return ($r) result;\n" +
                 "\n" +
