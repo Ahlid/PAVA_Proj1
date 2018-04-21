@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -87,6 +89,7 @@ public class WithGenericFunctions {
             	.filter(m -> m.getAnnotation(AfterMethod.class) == null)
             	.collect(Collectors.toList());
             registerMethods(typeTree, nonAnnotatedMethods, entry.getKey());
+            typeTree.get(entry.getKey()).preetyPrint();
 
             // build before methods
             List<Method> beforeMethods = methods.stream()
@@ -124,14 +127,8 @@ public class WithGenericFunctions {
             TypeNode curNode = null;
             for (Type type : m.getGenericParameterTypes()) {
 
-                Class<?> c = null;
-                try {
-                    c = Class.forName(type.getTypeName());
-                } catch (ClassNotFoundException e) {
+                Class<?> c = determineTypeClass(type);
 
-                    String newClassName = "[L" + type.getTypeName().substring(0, type.getTypeName().length() - 2).replace("/", ".") + ";";
-                    c = Class.forName(newClassName);
-                }
                 // first iteration always enters here
                 if (curNode == null)
                     curNode = tree.getRoot();
@@ -143,6 +140,27 @@ public class WithGenericFunctions {
             }
             curNode.setMethod(m);
         }
+	}
+
+	private static Class<?> determineTypeClass(Type type) throws ClassNotFoundException {
+		Class<?> c = null;
+        try {
+            c = Class.forName(type.getTypeName());
+        } catch (ClassNotFoundException e) {
+        	// When here, its not a simple type
+        	// Declare patterns here
+        	Matcher listMatcher = Pattern.compile("java.util.List<(.*)>").matcher(type.getTypeName());
+        	Matcher arrayMatcher = Pattern.compile("(.*)\\[\\]").matcher(type.getTypeName());
+        	
+        	if (listMatcher.matches()) {
+        		c = Class.forName("java.util.List");
+        		String listSubType = listMatcher.group(1);
+        	} else if (arrayMatcher.matches()) {
+        		String newClassName = String.format("[L%s;", arrayMatcher.group(1));
+        		c = Class.forName(newClassName);
+        	}
+        }
+        return c;
 	}
 
 	public static HashMap<String, Integer> getConflicts(Class<?> clazz) {
