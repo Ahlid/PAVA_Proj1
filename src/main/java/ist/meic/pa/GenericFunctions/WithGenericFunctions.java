@@ -289,42 +289,35 @@ public class WithGenericFunctions {
      */
 	private static Map<Integer, List<Method>> _findAllMethods(TypeNode typeTree, Class<?>[] classes, Integer distance) {
 		Map<Integer, List<Method>> ret = new HashMap<>();
-		try {
-			Method method = getMethodFrom(typeTree, classes);
-			List<Method> list = getOrInit(ret, distance);
-			list.add(method);
-		} catch (Exception e) {
-			// I guess theres no methods here
-		}
+		recurseSuperClasses(typeTree, ret, classes, 0, 0);
+		return ret;
+	}
 
-		for (int i = 0; i < classes.length ; i++) {
-			Class<?>[] copy = classes.clone();
-			
-			// Do superclass
-			copy[i] = classes[i].getSuperclass();
-			if (copy[i] != null)
-				_findAllMethods(typeTree, copy, distance++)
-					.entrySet()
-					.stream()
-					.forEach(entry -> {
-						List<Method> list = getOrInit(ret, entry.getKey()); 
-						list.addAll(entry.getValue());
-					});
-
-			// Do interface
-			for (Class<?> interfaze : classes[i].getInterfaces()) {
-				copy[i] = interfaze;
-				if (copy[i] != null) 
-					_findAllMethods(typeTree, copy, distance)
-					.entrySet()
-					.stream()
-					.forEach(entry -> {
-						List<Method> list = getOrInit(ret, entry.getKey()); 
-						list.addAll(entry.getValue());
-					});
+	/**
+	 * Do the recursive lookup of methods. Rank them according to a distance. Like
+	 * CLOS, exaust the furthest right member of the array before moving up on the
+	 * other indexes
+	 */
+	private static int recurseSuperClasses(TypeNode typeTree, Map<Integer, List<Method>> distanceMap, Class<?>[] classes, Integer index, Integer distance) {
+		classes = classes.clone();
+		for (int i = index; i < classes.length - 1; i++) {
+			while (classes[i] != null) {
+				distance = recurseSuperClasses(typeTree, distanceMap, classes, i + 1, distance);
+				classes[i] = classes[i].getSuperclass();
 			}
 		}
-		return ret;
+
+		int rightMost = classes.length - 1;
+		if (index == rightMost)
+			while (classes[rightMost] != null) {
+				try {
+					Method method = getMethodFrom(typeTree, classes);
+					List<Method> list = getOrInit(distanceMap, distance++);
+					list.add(method);
+				} catch (Exception e) {}
+				classes[rightMost] = classes[rightMost].getSuperclass();
+			}
+		return distance;
 	}
 
 	/**
