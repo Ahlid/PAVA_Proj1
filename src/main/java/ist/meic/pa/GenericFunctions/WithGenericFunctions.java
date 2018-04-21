@@ -5,8 +5,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -142,6 +144,12 @@ public class WithGenericFunctions {
         }
 	}
 
+    /**
+     * Find the class related to the given type. Diferentiate between collections and arrays here.
+     * @param type
+     * @return
+     * @throws ClassNotFoundException
+     */
 	private static Class<?> determineTypeClass(Type type) throws ClassNotFoundException {
 		Class<?> c = null;
         try {
@@ -149,15 +157,20 @@ public class WithGenericFunctions {
         } catch (ClassNotFoundException e) {
         	// When here, its not a simple type
         	// Declare patterns here
-        	Matcher listMatcher = Pattern.compile("java.util.List<(.*)>").matcher(type.getTypeName());
+
+        	// matches tokens like java.util.List<java.lang.Object>
+        	Matcher parameterizedTypeMatcher = Pattern.compile("(.*)<(.*)>").matcher(type.getTypeName());
+
+        	// matches tokens like java.lang.Object[]
         	Matcher arrayMatcher = Pattern.compile("(.*)\\[\\]").matcher(type.getTypeName());
-        	
-        	if (listMatcher.matches()) {
-        		c = Class.forName("java.util.List");
-        		String listSubType = listMatcher.group(1);
+
+        	if (parameterizedTypeMatcher.matches()) {
+        		String className = parameterizedTypeMatcher.group(1);
+        		String parameterType = parameterizedTypeMatcher.group(2);
+        		c = Class.forName(className);
         	} else if (arrayMatcher.matches()) {
-        		String newClassName = String.format("[L%s;", arrayMatcher.group(1));
-        		c = Class.forName(newClassName);
+        		String className = String.format("[L%s;", arrayMatcher.group(1));
+        		c = Class.forName(className);
         	}
         }
         return c;
@@ -177,7 +190,7 @@ public class WithGenericFunctions {
         Class<?>[] currentClassesArgs = classes.clone();
         try {
         	ret = getMethodFrom(root, currentClassesArgs);
-            //chegamos ao fim, vamos come√ßar a chamar superclasses
+            //chegamos ao fim, vamos comeÁar a chamar superclasses
         } catch (Exception e) {
 
             //vamos atribuir a superclass ao ultimo argumento
@@ -191,7 +204,7 @@ public class WithGenericFunctions {
                     currentClassesArgs[i] = startedClasses[i];
                 } else if (clazz == null) {
                     //temos de chamar a superclasse do argumento anterior
-                    //se n√£o existe argumento anterior n√£o existe metodo
+                    //se n„o existe argumento anterior n„o existe metodo
                     if (i == 0) {
                         return null;
                     } else {
@@ -254,19 +267,24 @@ public class WithGenericFunctions {
      * @throws ClassNotFoundException
      */
     private static List<Method> findAllMethods(TypeNode typeTree, Class<?>[] classes) {
-		List<Method> ret = new ArrayList<>();
+		Set<Method> ret = new LinkedHashSet<>();
 		Map<Integer, List<Method>> methods = _findAllMethods(typeTree, classes, 0);
-		methods.keySet().stream()
+		methods.keySet()
+				.stream()
 				.sorted()
 				.forEach(
-					i -> ret.addAll(methods.get(i).stream().distinct().collect(Collectors.toList())));
-		return ret;
+					i -> ret.addAll(methods.get(i)
+										.stream()
+										.distinct()
+										.collect(Collectors.toList())));
+		return ret.stream().collect(Collectors.toList());
 	}
 
     /**
      * Return a collection of methods grouped by their distance to the root class
      * @param typeTree
      * @param classes
+     * @param distance how many times getSuperclass/getInterface has been called to get here
      * @return
      */
 	private static Map<Integer, List<Method>> _findAllMethods(TypeNode typeTree, Class<?>[] classes, Integer distance) {
@@ -278,15 +296,33 @@ public class WithGenericFunctions {
 		} catch (Exception e) {
 			// I guess theres no methods here
 		}
-		for (int i = 0; i < classes.length; i++) {
+
+		for (int i = 0; i < classes.length ; i++) {
 			Class<?>[] copy = classes.clone();
-			copy[i] = copy[i].getSuperclass();
-			if (copy[i]== null) continue;
-			_findAllMethods(typeTree, copy, distance + 1).entrySet().stream()
-			.forEach(entry -> {
-				List<Method> list = getOrInit(ret, entry.getKey()); 
-				list.addAll(entry.getValue());
-			});
+			
+			// Do superclass
+			copy[i] = classes[i].getSuperclass();
+			if (copy[i] != null)
+				_findAllMethods(typeTree, copy, distance++)
+					.entrySet()
+					.stream()
+					.forEach(entry -> {
+						List<Method> list = getOrInit(ret, entry.getKey()); 
+						list.addAll(entry.getValue());
+					});
+
+			// Do interface
+			for (Class<?> interfaze : classes[i].getInterfaces()) {
+				copy[i] = interfaze;
+				if (copy[i] != null) 
+					_findAllMethods(typeTree, copy, distance)
+					.entrySet()
+					.stream()
+					.forEach(entry -> {
+						List<Method> list = getOrInit(ret, entry.getKey()); 
+						list.addAll(entry.getValue());
+					});
+			}
 		}
 		return ret;
 	}
