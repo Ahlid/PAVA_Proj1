@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TypeNode {
 
@@ -96,16 +97,40 @@ public class TypeNode {
     }
 
     public String toStringChildren() {
-        String s = "";
-        for (TypeNode n : this.children.values()) {
-            s += n + ",";
-        }
-        return s;
+		String childs = String.join("\n", children.values()
+												.stream()
+												.map(c -> c.preetyPrint())
+												.collect(Collectors.toList()));
+        return childs;
     }
 
+    private int getDepth() {
+    	int i= getParent() != null ? getParent().getDepth() : 0;
+    	i += 1;
+    	return i;
+    }
+
+	private String getDepthTabs() {
+		int depth = getDepth();
+		String ret = "";
+		for (int i = 0; i < depth; i++)
+			ret += "\t";
+		return ret;
+	}
+
+	public String preetyPrint() {
+		String tabs = getDepthTabs();
+		
+		String out = String.format("[%s]%s\n%s",
+        		clazz,
+        		this.method != null ? "*" : "",
+        		toStringChildren());
+		out = out.replaceAll("^(.*)", tabs + "$1");
+		return out;
+	}
+	
     @Override
     public String toString() {
-        return "{clazz=" + clazz + "(" + (this.method != null) +
-                ")\n, children=[" + toStringChildren() + "]}";
+        return preetyPrint();
     }
 }
