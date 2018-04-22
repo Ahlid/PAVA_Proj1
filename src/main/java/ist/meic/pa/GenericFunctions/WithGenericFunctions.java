@@ -2,13 +2,7 @@ package ist.meic.pa.GenericFunctions;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -82,41 +76,43 @@ public class WithGenericFunctions {
                 continue;
 
             List<Method> methods = Stream.of(clazz.getMethods())
-            		.filter(m -> m.getName().equals(entry.getKey()))
+                    .filter(m -> m.getName().equals(entry.getKey()))
                     .collect(Collectors.toList());
-            
+
             // build the type tree
             List<Method> nonAnnotatedMethods = methods.stream()
-            	.filter(m -> m.getAnnotation(BeforeMethod.class) == null)
-            	.filter(m -> m.getAnnotation(AfterMethod.class) == null)
-            	.collect(Collectors.toList());
+                    .filter(m -> m.getAnnotation(BeforeMethod.class) == null)
+                    .filter(m -> m.getAnnotation(AfterMethod.class) == null)
+                    .collect(Collectors.toList());
             registerMethods(typeTree, nonAnnotatedMethods, entry.getKey());
             typeTree.get(entry.getKey()).preetyPrint();
 
             // build before methods
             List<Method> beforeMethods = methods.stream()
-            	.filter(m -> m.getAnnotation(BeforeMethod.class) != null)
-            	.collect(Collectors.toList());
+                    .filter(m -> m.getAnnotation(BeforeMethod.class) != null)
+                    .collect(Collectors.toList());
             registerMethods(typeTree, beforeMethods, entry.getKey() + "@BeforeMethod");
 
             // build after methods
             List<Method> afterMethods = methods.stream()
-        		.filter(m -> m.getAnnotation(AfterMethod.class) != null)
-        		.collect(Collectors.toList());
-        	registerMethods(typeTree, afterMethods, entry.getKey() + "@AfterMethod");
+                    .filter(m -> m.getAnnotation(AfterMethod.class) != null)
+                    .collect(Collectors.toList());
+            registerMethods(typeTree, afterMethods, entry.getKey() + "@AfterMethod");
         }
+        // System.out.println(typeTree);
         return typeTree;
     }
 
     /**
      * Add this group of methods to the typetree with the correct path according to their arguments.
+     *
      * @param typeTree
      * @param methods
      * @param key
      * @throws ClassNotFoundException
      */
     private static void registerMethods(HashMap<String, TypeNode> typeTree, List<Method> methods, String key) throws ClassNotFoundException {
-    	for (Method m : methods) {
+        for (Method m : methods) {
 
             TypeNode tree = typeTree.get(key);
 
@@ -142,41 +138,42 @@ public class WithGenericFunctions {
             }
             curNode.setMethod(m);
         }
-	}
+    }
 
     /**
      * Find the class related to the given type. Diferentiate between collections and arrays here.
+     *
      * @param type
      * @return
      * @throws ClassNotFoundException
      */
-	private static Class<?> determineTypeClass(Type type) throws ClassNotFoundException {
-		Class<?> c = null;
+    private static Class<?> determineTypeClass(Type type) throws ClassNotFoundException {
+        Class<?> c = null;
         try {
             c = Class.forName(type.getTypeName());
         } catch (ClassNotFoundException e) {
-        	// When here, its not a simple type
-        	// Declare patterns here
+            // When here, its not a simple type
+            // Declare patterns here
 
-        	// matches tokens like java.util.List<java.lang.Object>
-        	Matcher parameterizedTypeMatcher = Pattern.compile("(.*)<(.*)>").matcher(type.getTypeName());
+            // matches tokens like java.util.List<java.lang.Object>
+            Matcher parameterizedTypeMatcher = Pattern.compile("(.*)<(.*)>").matcher(type.getTypeName());
 
-        	// matches tokens like java.lang.Object[]
-        	Matcher arrayMatcher = Pattern.compile("(.*)\\[\\]").matcher(type.getTypeName());
+            // matches tokens like java.lang.Object[]
+            Matcher arrayMatcher = Pattern.compile("(.*)\\[\\]").matcher(type.getTypeName());
 
-        	if (parameterizedTypeMatcher.matches()) {
-        		String className = parameterizedTypeMatcher.group(1);
-        		String parameterType = parameterizedTypeMatcher.group(2);
-        		c = Class.forName(className);
-        	} else if (arrayMatcher.matches()) {
-        		String className = String.format("[L%s;", arrayMatcher.group(1));
-        		c = Class.forName(className);
-        	}
+            if (parameterizedTypeMatcher.matches()) {
+                String className = parameterizedTypeMatcher.group(1);
+                String parameterType = parameterizedTypeMatcher.group(2);
+                c = Class.forName(className);
+            } else if (arrayMatcher.matches()) {
+                String className = String.format("[L%s;", arrayMatcher.group(1));
+                c = Class.forName(className);
+            }
         }
         return c;
-	}
+    }
 
-	public static HashMap<String, Integer> getConflicts(Class<?> clazz) {
+    public static HashMap<String, Integer> getConflicts(Class<?> clazz) {
         HashMap<String, Integer> counts = new HashMap<String, Integer>();
         for (Method m : clazz.getDeclaredMethods()) {
             Integer count = counts.get(m.getName());
@@ -185,13 +182,74 @@ public class WithGenericFunctions {
         return counts;
     }
 
+    // i is used for recursion, for the initial call this should be 0
+    private static List<List<Class>> combineInterfaces(List<List<Class>> input, int i) {
+
+        // stop condition
+        if (i == input.size()) {
+            // return a list with an empty list
+            List<List<Class>> result = new ArrayList();
+            result.add(new ArrayList());
+            return result;
+        }
+
+        List<List<Class>> result = new ArrayList();
+        List<List<Class>> recursive = combineInterfaces(input, i + 1); // recursive call
+
+
+        // for each element of the first list of input
+        for (int j = 0; j < input.get(i).size(); j++) {
+            // add the element to all combinations obtained for the rest of the lists
+            for (int k = 0; k < recursive.size(); k++) {
+                // copy a combination from recursive
+                List<Class> newList = new ArrayList();
+                for (Class integer : recursive.get(k)) {
+                    newList.add(integer);
+                }
+                // add element of the first list
+                newList.add(input.get(i).get(j));
+                // add new combination to result
+                result.add(newList);
+            }
+        }
+        return result;
+    }
+
     public static Method findBest(TypeNode root, Class<?>[] classes, Class<?>[] startedClasses) throws NoSuchMethodException, SecurityException {
         Method ret = null;
         Class<?>[] currentClassesArgs = classes.clone();
+
+
+        List<List<Class>> interfaces = new ArrayList();
+        for (Class c : currentClassesArgs) {
+            interfaces.add(new ArrayList(Arrays.asList(c.getInterfaces())));
+        }
+
+        List<List<Class>> combinedInterfaces = combineInterfaces(interfaces, 0);
+
         try {
-        	ret = getMethodFrom(root, currentClassesArgs);
-            //chegamos ao fim, vamos começar a chamar superclasses
+            ret = getMethodFrom(root, currentClassesArgs);
+            //chegamos ao fim, vamos comeï¿½ar a chamar superclasses
         } catch (Exception e) {
+
+            //vamos verificar se existe um metodo para as interfaces
+            for (List<Class> interfaceComb : combinedInterfaces) {
+                try {
+
+                    Class[] classes1 = new Class[interfaceComb.size()];
+
+                    for (int i = 0; i < interfaceComb.size(); i++) {
+                        classes1[i] = interfaceComb.get(i);
+                    }
+
+                    ret = getMethodFrom(root, classes1);
+                    return ret;
+
+                } catch (Exception e1) {
+                    continue;
+                }
+            }
+
 
             //vamos atribuir a superclass ao ultimo argumento
             currentClassesArgs[currentClassesArgs.length - 1] = currentClassesArgs[currentClassesArgs.length - 1].getSuperclass();
@@ -204,7 +262,7 @@ public class WithGenericFunctions {
                     currentClassesArgs[i] = startedClasses[i];
                 } else if (clazz == null) {
                     //temos de chamar a superclasse do argumento anterior
-                    //se não existe argumento anterior não existe metodo
+                    //se nï¿½o existe argumento anterior nï¿½o existe metodo
                     if (i == 0) {
                         return null;
                     } else {
@@ -223,19 +281,22 @@ public class WithGenericFunctions {
     }
 
     /**
-	 * Get the method associated to the path followed by the classes array given on
-	 * the given tree.
-	 * 
-	 * @param tree
-	 * @param classes
-	 * @return
-	 * @throws Exception
-	 */
+     * Get the method associated to the path followed by the classes array given on
+     * the given tree.
+     *
+     * @param tree
+     * @param classes
+     * @return
+     * @throws Exception
+     */
     private static Method getMethodFrom(TypeNode tree, Class<?>[] classes) throws Exception {
-    	for (Class<?> c : classes)
-    		tree = tree.getTypeNode(c);
+
+        for (Class<?> c : classes) {
+            tree = tree.getTypeNode(c);
+        }
 
         Method ret = tree.getMethod();
+
         if (ret == null) {
             throw new Exception();
         }
@@ -243,96 +304,100 @@ public class WithGenericFunctions {
     }
 
     public static Method[] findAfterHooks(TypeNode typeTree, Class<?>[] classes) throws ClassNotFoundException {
-    	List<Method> hooks = findAllMethods(typeTree, classes);
-    	Collections.reverse(hooks);
-    	
-    	Method[] ret = new Method[hooks.size()];
-    	hooks.toArray(ret);
-    	return ret;
+        List<Method> hooks = findAllMethods(typeTree, classes);
+        Collections.reverse(hooks);
+
+        Method[] ret = new Method[hooks.size()];
+        hooks.toArray(ret);
+        return ret;
     }
 
     public static Method[] findBeforeHooks(TypeNode typeTree, Class<?>[] classes) throws ClassNotFoundException {
-    	List<Method> hooks = findAllMethods(typeTree, classes);
-    	
-		Method[] ret = new Method[hooks.size()];
-		hooks.toArray(ret);
-    	return ret;
+        List<Method> hooks = findAllMethods(typeTree, classes);
+
+        Method[] ret = new Method[hooks.size()];
+        hooks.toArray(ret);
+        return ret;
     }
 
     /**
-     * Return a list of methods ordered by ascending order of distance. 
+     * Return a list of methods ordered by ascending order of distance.
+     *
      * @param typeTree
      * @param classes
      * @return
      * @throws ClassNotFoundException
      */
     private static List<Method> findAllMethods(TypeNode typeTree, Class<?>[] classes) {
-		Set<Method> ret = new LinkedHashSet<>();
-		Map<Integer, List<Method>> methods = _findAllMethods(typeTree, classes, 0);
-		methods.keySet()
-				.stream()
-				.sorted()
-				.forEach(
-					i -> ret.addAll(methods.get(i)
-										.stream()
-										.distinct()
-										.collect(Collectors.toList())));
-		return ret.stream().collect(Collectors.toList());
-	}
+        Set<Method> ret = new LinkedHashSet<>();
+        Map<Integer, List<Method>> methods = _findAllMethods(typeTree, classes, 0);
+        methods.keySet()
+                .stream()
+                .sorted()
+                .forEach(
+                        i -> ret.addAll(methods.get(i)
+                                .stream()
+                                .distinct()
+                                .collect(Collectors.toList())));
+        return ret.stream().collect(Collectors.toList());
+    }
 
     /**
      * Return a collection of methods grouped by their distance to the root class
+     *
      * @param typeTree
      * @param classes
      * @param distance how many times getSuperclass/getInterface has been called to get here
      * @return
      */
-	private static Map<Integer, List<Method>> _findAllMethods(TypeNode typeTree, Class<?>[] classes, Integer distance) {
-		Map<Integer, List<Method>> ret = new HashMap<>();
-		recurseSuperClasses(typeTree, ret, classes, 0, 0);
-		return ret;
-	}
+    private static Map<Integer, List<Method>> _findAllMethods(TypeNode typeTree, Class<?>[] classes, Integer distance) {
+        Map<Integer, List<Method>> ret = new HashMap<>();
+        recurseSuperClasses(typeTree, ret, classes, 0, 0);
+        return ret;
+    }
 
-	/**
-	 * Do the recursive lookup of methods. Rank them according to a distance. Like
-	 * CLOS, exaust the furthest right member of the array before moving up on the
-	 * other indexes
-	 */
-	private static int recurseSuperClasses(TypeNode typeTree, Map<Integer, List<Method>> distanceMap, Class<?>[] classes, Integer index, Integer distance) {
-		classes = classes.clone();
-		for (int i = index; i < classes.length - 1; i++) {
-			while (classes[i] != null) {
-				distance = recurseSuperClasses(typeTree, distanceMap, classes, i + 1, distance);
-				classes[i] = classes[i].getSuperclass();
-			}
-		}
+    /**
+     * Do the recursive lookup of methods. Rank them according to a distance. Like
+     * CLOS, exaust the furthest right member of the array before moving up on the
+     * other indexes
+     */
+    private static int recurseSuperClasses(TypeNode typeTree, Map<Integer, List<Method>> distanceMap, Class<?>[] classes, Integer index, Integer distance) {
+        classes = classes.clone();
+        for (int i = index; i < classes.length - 1; i++) {
+            while (classes[i] != null) {
+                distance = recurseSuperClasses(typeTree, distanceMap, classes, i + 1, distance);
+                classes[i] = classes[i].getSuperclass();
+            }
+        }
 
-		int rightMost = classes.length - 1;
-		if (index == rightMost)
-			while (classes[rightMost] != null) {
-				try {
-					Method method = getMethodFrom(typeTree, classes);
-					List<Method> list = getOrInit(distanceMap, distance++);
-					list.add(method);
-				} catch (Exception e) {}
-				classes[rightMost] = classes[rightMost].getSuperclass();
-			}
-		return distance;
-	}
+        int rightMost = classes.length - 1;
+        if (index == rightMost)
+            while (classes[rightMost] != null) {
+                try {
+                    Method method = getMethodFrom(typeTree, classes);
+                    List<Method> list = getOrInit(distanceMap, distance++);
+                    list.add(method);
+                } catch (Exception e) {
+                }
+                classes[rightMost] = classes[rightMost].getSuperclass();
+            }
+        return distance;
+    }
 
-	/**
-	 * Get the list. Initiate it if its empty
-	 * @param ret
-	 * @param distance
-	 * @return
-	 */
-	private static List<Method> getOrInit(Map<Integer, List<Method>> ret, Integer distance) {
-		List<Method> list = ret.get(distance);
-		if (list == null) {
-			list = new ArrayList<Method>();
-			ret.put(distance, list);
-		}
-		return list;
-	}
+    /**
+     * Get the list. Initiate it if its empty
+     *
+     * @param ret
+     * @param distance
+     * @return
+     */
+    private static List<Method> getOrInit(Map<Integer, List<Method>> ret, Integer distance) {
+        List<Method> list = ret.get(distance);
+        if (list == null) {
+            list = new ArrayList<Method>();
+            ret.put(distance, list);
+        }
+        return list;
+    }
 
 }

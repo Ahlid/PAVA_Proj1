@@ -13,6 +13,7 @@ public class ArrayCom {
         return new Object[] { a, b };
     }
     public static Object bine(Object[] a, Object[] b) {
+
         Object[] r = new Object[a.length];
         for (int i = 0; i < a.length; i++) {
             r[i] = ArrayCom.bine(a[i], b[i]);
