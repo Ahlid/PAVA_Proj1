@@ -16,7 +16,7 @@ public class What {
 
     @BeforeMethod
     public static void is(Blue o) {
-        System.out.println("Blue ");
+        System.out.println("Blue");
     }
 
     @AfterMethod

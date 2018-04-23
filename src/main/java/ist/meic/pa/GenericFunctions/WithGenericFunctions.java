@@ -75,16 +75,19 @@ public class WithGenericFunctions {
             if (entry.getValue() < 2)
                 continue;
 
-            List<Method> methods = Stream.of(clazz.getMethods())
+            List<Method> methods = Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> m.getName().equals(entry.getKey()))
                     .collect(Collectors.toList());
+
 
             // build the type tree
             List<Method> nonAnnotatedMethods = methods.stream()
                     .filter(m -> m.getAnnotation(BeforeMethod.class) == null)
                     .filter(m -> m.getAnnotation(AfterMethod.class) == null)
                     .collect(Collectors.toList());
+
             registerMethods(typeTree, nonAnnotatedMethods, entry.getKey());
+            //System.out.println(typeTree);
             typeTree.get(entry.getKey()).preetyPrint();
 
             // build before methods
@@ -114,6 +117,8 @@ public class WithGenericFunctions {
     private static void registerMethods(HashMap<String, TypeNode> typeTree, List<Method> methods, String key) throws ClassNotFoundException {
         for (Method m : methods) {
 
+            // System.out.println(m);
+
             TypeNode tree = typeTree.get(key);
 
             // if the tree doesnt exist for this method just init it
@@ -138,6 +143,7 @@ public class WithGenericFunctions {
             }
             curNode.setMethod(m);
         }
+
     }
 
     /**
@@ -183,7 +189,7 @@ public class WithGenericFunctions {
     }
 
     // i is used for recursion, for the initial call this should be 0
-    private static List<List<Class>> combineInterfaces(List<List<Class>> input, int i) {
+    private static List<List<Class>> combine(List<List<Class>> input, int i) {
 
         // stop condition
         if (i == input.size()) {
@@ -194,7 +200,7 @@ public class WithGenericFunctions {
         }
 
         List<List<Class>> result = new ArrayList();
-        List<List<Class>> recursive = combineInterfaces(input, i + 1); // recursive call
+        List<List<Class>> recursive = combine(input, i + 1); // recursive call
 
 
         // for each element of the first list of input
@@ -215,17 +221,94 @@ public class WithGenericFunctions {
         return result;
     }
 
-    public static Method findBest(TypeNode root, Class<?>[] classes, Class<?>[] startedClasses) throws NoSuchMethodException, SecurityException {
-        Method ret = null;
-        Class<?>[] currentClassesArgs = classes.clone();
+    public static Method findBest2(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
 
+        Method method = null;
+        List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
+
+        for (List<Class> arguments : argumentsCombinations) {
+
+            //System.out.println(arguments);
+
+            try {
+                method = getMethodFrom(root, getArrayClassFromList(arguments));
+                break;
+            } catch (Exception e) {
+                continue;
+            }
+
+        }
+
+        return method;
+
+    }
+
+    private static Class[] getArrayClassFromList(List<Class> classesList) {
+
+        Class[] classes = new Class[classesList.size()];
+
+        for (int i = 0; i < classesList.size(); i++) {
+            classes[i] = classesList.get(i);
+        }
+
+        return classes;
+
+    }
+
+    private static List<List<Class>> getAllClassCombinations(Class[] classes) {
+
+        //the list where we will store our class type and all supertypes per array
+        List<List<Class>> classesSet = new ArrayList<>();
+
+        //loop all classes
+        for (Class currentClass : classes) {
+
+            //the list for the class and the superclass
+            List<Class> superList = new ArrayList<>();
+
+            //add the class
+            superList.add(currentClass);
+            //add interfaces
+            superList.addAll(new ArrayList(Arrays.asList(currentClass.getInterfaces())));
+
+            //add the superclasses
+            while (currentClass.getSuperclass() != null) {
+                superList.add(currentClass.getSuperclass());
+                currentClass = currentClass.getSuperclass();
+                //add interfaces
+                superList.addAll(new ArrayList(Arrays.asList(currentClass.getInterfaces())));
+            }
+
+            //add it to the list
+            classesSet.add(superList);
+
+        }
+
+
+        //combine all classes in order that we start from the right arguments superclass call to the left argument
+        List<List<Class>> result = combine(classesSet, 0).stream().map(i -> {
+            Collections.reverse(i);
+            return i;
+        }).collect(Collectors.toList());
+
+        return result;
+
+    }
+
+
+    public static Method findBest(TypeNode root, Class<?>[] classes, Class<?>[] startedClasses) throws NoSuchMethodException, SecurityException {
+
+        Method ret = null;
+
+        Class<?>[] currentClassesArgs = classes.clone();
 
         List<List<Class>> interfaces = new ArrayList();
         for (Class c : currentClassesArgs) {
             interfaces.add(new ArrayList(Arrays.asList(c.getInterfaces())));
+
         }
 
-        List<List<Class>> combinedInterfaces = combineInterfaces(interfaces, 0);
+        List<List<Class>> combinedInterfaces = combine(interfaces, 0);
 
         try {
             ret = getMethodFrom(root, currentClassesArgs);
@@ -329,7 +412,25 @@ public class WithGenericFunctions {
      * @throws ClassNotFoundException
      */
     private static List<Method> findAllMethods(TypeNode typeTree, Class<?>[] classes) {
-        Set<Method> ret = new LinkedHashSet<>();
+
+        List<Method> methods = new ArrayList<>();
+        List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
+
+        for (List<Class> arguments : argumentsCombinations) {
+
+           // System.out.println(arguments);
+
+            try {
+                methods.add(getMethodFrom(typeTree, getArrayClassFromList(arguments)));
+            } catch (Exception e) {
+                continue;
+            }
+
+        }
+
+        return methods;
+
+      /*  Set<Method> ret = new LinkedHashSet<>();
         Map<Integer, List<Method>> methods = _findAllMethods(typeTree, classes, 0);
         methods.keySet()
                 .stream()
@@ -340,6 +441,7 @@ public class WithGenericFunctions {
                                 .distinct()
                                 .collect(Collectors.toList())));
         return ret.stream().collect(Collectors.toList());
+        */
     }
 
     /**

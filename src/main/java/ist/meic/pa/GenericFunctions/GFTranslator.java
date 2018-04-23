@@ -59,7 +59,7 @@ public class GFTranslator implements Translator {
                 }
 
                 //get the methods
-                List<CtMethod> methods = Stream.of(ctClass.getMethods()).filter(m -> m.getName().equals(entry.getKey()))
+                List<CtMethod> methods = Stream.of(ctClass.getDeclaredMethods()).filter(m -> m.getName().equals(entry.getKey()))
                         .collect(Collectors.toList());
 
 
@@ -136,7 +136,7 @@ public class GFTranslator implements Translator {
                 "                	beforeMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
                 "        		 }\n" +
                 "\n" +
-                "            java.lang.reflect.Method method = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest(root, classes, classes);\n" +
+                "            java.lang.reflect.Method method = ist.meic.pa.GenericFunctions.WithGenericFunctions.findBest2(root, classes);\n" +
                 "            Object result =  method.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
                 "             java.lang.reflect.Method[] afterMethods = ist.meic.pa.GenericFunctions.WithGenericFunctions.findAfterHooks(afterRoot, classes);\n" +
                 "            if (afterMethods != null)\n" +
