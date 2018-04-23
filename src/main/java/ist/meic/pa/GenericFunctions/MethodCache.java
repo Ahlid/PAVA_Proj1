@@ -15,7 +15,7 @@ public class MethodCache {
 			try {
 				TypeNode search = methodTree;
 				for (Class<?> c : args) {
-					search.getTypeNode(c);
+					search = search.getTypeNode(c);
 				}
 				return search.getMethod();
 			} catch (Exception e) {
@@ -41,6 +41,7 @@ public class MethodCache {
 					newChild = next;
 				}
 			}
+			newChild.setMethod(m);
 		}
 	}
 
