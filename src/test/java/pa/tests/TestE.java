@@ -9,7 +9,7 @@ public class TestE extends AbstractTest {
     @Test
     public void doTest() throws Throwable {
         WithGenericFunctions.main(new String[]{"pa.tests.TestE"});
-        validateOut("E.out");
+        validateOut("E");
     }
 
     public static void main(String[] args) {

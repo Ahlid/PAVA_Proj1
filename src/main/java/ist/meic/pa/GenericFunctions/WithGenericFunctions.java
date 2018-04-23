@@ -87,7 +87,6 @@ public class WithGenericFunctions {
                     .collect(Collectors.toList());
 
             registerMethods(typeTree, nonAnnotatedMethods, entry.getKey());
-            //System.out.println(typeTree);
             typeTree.get(entry.getKey()).preetyPrint();
 
             // build before methods
@@ -102,7 +101,6 @@ public class WithGenericFunctions {
                     .collect(Collectors.toList());
             registerMethods(typeTree, afterMethods, entry.getKey() + "@AfterMethod");
         }
-        // System.out.println(typeTree);
         return typeTree;
     }
 
@@ -224,22 +222,24 @@ public class WithGenericFunctions {
     public static Method findBest2(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
 
         Method method = null;
-        List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
-
-        for (List<Class> arguments : argumentsCombinations) {
-
-            //System.out.println(arguments);
-
-            try {
-                method = getMethodFrom(root, getArrayClassFromList(arguments));
-                break;
-            } catch (Exception e) {
-                continue;
-            }
-
+        Method cachedMethod = MethodCache.getCachedMethod(classes);
+        if (cachedMethod != null) {
+        	return cachedMethod;
+        } else {
+        	List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
+        	for (List<Class> arguments : argumentsCombinations) {
+        		try {
+        			method = getMethodFrom(root, getArrayClassFromList(arguments));
+        			break;
+        		} catch (Exception e) {
+        			continue;
+        		}
+        	}
+        	if (method != null) {
+        		MethodCache.cacheMethod(method, classes);
+        	}
+        	return method;
         }
-
-        return method;
 
     }
 
