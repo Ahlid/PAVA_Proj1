@@ -16,6 +16,7 @@ public class GFTranslator implements Translator {
         //??
     }
 
+
     @Override
     public void onLoad(ClassPool classPool, String className) throws NotFoundException, CannotCompileException {
 
@@ -35,6 +36,12 @@ public class GFTranslator implements Translator {
         }
     }
 
+    /**
+     * Applies the multidispatch to the class
+     * @param ctClass - the class to apply it
+     * @param className - the name of the class
+     * @throws InitializationException
+     */
     public void applyMultipleDispatch(CtClass ctClass, String className) throws InitializationException {
 
         try {
@@ -129,6 +136,13 @@ public class GFTranslator implements Translator {
         return methodProxy;
     }
 
+    /**
+     * Return the code to inject in the dispatch method
+     * @param name - name of the method
+     * @param className - name of the class
+     * @param isStatic - is the method is static
+     * @return - the string with de code to inject
+     */
     private String getInjectedCode(String name, String className, boolean isStatic) {
 
 
@@ -139,7 +153,7 @@ public class GFTranslator implements Translator {
                 "            classes[i] = $1[i].getClass();\n" +
                 "        }\n" +
                 "\n" +
-               // "if(false){\n" +
+                //"if(false){\n" +
                 "if(my$cache.isCached(classes)){\n" +
 
                 "            java.lang.reflect.Method[] beforeMethods = my$cache.getBeforeMethods(classes);\n" +

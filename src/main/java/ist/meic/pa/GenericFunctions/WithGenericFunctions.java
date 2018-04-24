@@ -43,6 +43,13 @@ public class WithGenericFunctions {
         init(programName, restArgs);
     }
 
+    /**
+     * Method that inits the class loader and the changes in the classes
+     *
+     * @param name - the class to take control after the transformations
+     * @param args - the arguments to send to the class that will take control
+     * @throws Throwable - an error if something goes wrong in the transformations
+     */
     private static void init(String name, String[] args) throws Throwable {
 
         // configure classpoll and add translator to loader
@@ -55,6 +62,12 @@ public class WithGenericFunctions {
         classLoader.run(name, args);
     }
 
+    /**
+     * Gets the type tree based on the class methods
+     *
+     * @param clazz - the class to get the type tree
+     * @return the tree for the class
+     */
     public static HashMap<String, TypeNode> getTypeTree(Class<?> clazz) {
         Map<String, Integer> counts = getConflicts(clazz);
 
@@ -67,6 +80,14 @@ public class WithGenericFunctions {
         }
     }
 
+    /**
+     * Generates the tree
+     *
+     * @param clazz  - the class
+     * @param counts - map with repeated methods
+     * @return the type tree
+     * @throws ClassNotFoundException
+     */
     private static HashMap<String, TypeNode> generateTypeTree(Class<?> clazz, Map<String, Integer> counts) throws ClassNotFoundException {
         HashMap<String, TypeNode> typeTree = new HashMap<String, TypeNode>();
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
@@ -177,6 +198,12 @@ public class WithGenericFunctions {
         return c;
     }
 
+    /**
+     * Gets the conflicts (methods with same name)
+     *
+     * @param clazz - the class to get the conflicts
+     * @return a map with name-number of conflicts
+     */
     public static HashMap<String, Integer> getConflicts(Class<?> clazz) {
         HashMap<String, Integer> counts = new HashMap<String, Integer>();
         for (Method m : clazz.getDeclaredMethods()) {
@@ -219,6 +246,15 @@ public class WithGenericFunctions {
         return result;
     }
 
+    /**
+     * Method that finds the best method in a root for the arguments
+     *
+     * @param root    - the search root
+     * @param classes - the arguments types
+     * @return the best method
+     * @throws NoSuchMethodException
+     * @throws SecurityException
+     */
     public static Method findBest2(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
 
 
@@ -239,6 +275,12 @@ public class WithGenericFunctions {
 
     }
 
+    /**
+     * Transforms a list into an array
+     *
+     * @param classesList - the list to transform
+     * @return the array from the list
+     */
     private static Class[] getArrayClassFromList(List<Class> classesList) {
 
         Class[] classes = new Class[classesList.size()];
@@ -251,6 +293,12 @@ public class WithGenericFunctions {
 
     }
 
+    /**
+     * Gets all the possible combinations
+     *
+     * @param classes - the lists classes to combine
+     * @return the combinations result
+     */
     private static List<List<Class>> getAllClassCombinations(Class[] classes) {
 
         //the list where we will store our class type and all supertypes per array
@@ -291,74 +339,6 @@ public class WithGenericFunctions {
 
     }
 
-
-    public static Method findBest(TypeNode root, Class<?>[] classes, Class<?>[] startedClasses) throws NoSuchMethodException, SecurityException {
-
-        Method ret = null;
-
-        Class<?>[] currentClassesArgs = classes.clone();
-
-        List<List<Class>> interfaces = new ArrayList();
-        for (Class c : currentClassesArgs) {
-            interfaces.add(new ArrayList(Arrays.asList(c.getInterfaces())));
-
-        }
-
-        List<List<Class>> combinedInterfaces = combine(interfaces, 0);
-
-        try {
-            ret = getMethodFrom(root, currentClassesArgs);
-            //chegamos ao fim, vamos come�ar a chamar superclasses
-        } catch (Exception e) {
-
-            //vamos verificar se existe um metodo para as interfaces
-            for (List<Class> interfaceComb : combinedInterfaces) {
-                try {
-
-                    Class[] classes1 = new Class[interfaceComb.size()];
-
-                    for (int i = 0; i < interfaceComb.size(); i++) {
-                        classes1[i] = interfaceComb.get(i);
-                    }
-
-                    ret = getMethodFrom(root, classes1);
-                    return ret;
-
-                } catch (Exception e1) {
-                    continue;
-                }
-            }
-
-
-            //vamos atribuir a superclass ao ultimo argumento
-            currentClassesArgs[currentClassesArgs.length - 1] = currentClassesArgs[currentClassesArgs.length - 1].getSuperclass();
-            boolean rebase = false;
-
-            for (int i = 0; i < currentClassesArgs.length; i++) {
-                Class<?> clazz = currentClassesArgs[i];
-
-                if (rebase) {
-                    currentClassesArgs[i] = startedClasses[i];
-                } else if (clazz == null) {
-                    //temos de chamar a superclasse do argumento anterior
-                    //se n�o existe argumento anterior n�o existe metodo
-                    if (i == 0) {
-                        return null;
-                    } else {
-                        //atribuir a superclasse ao argumento anterior a este
-                        currentClassesArgs[i - 1] = currentClassesArgs[i - 1].getSuperclass();
-
-                        //todos os seguintes argumentos devem passar para a classe inicial
-                        currentClassesArgs[i] = startedClasses[i];
-                        rebase = true;
-                    }
-                }
-            }
-            return findBest(root, currentClassesArgs, startedClasses);
-        }
-        return ret;
-    }
-
     /**
      * Get the method associated to the path followed by the classes array given on
      * the given tree.
@@ -382,6 +362,14 @@ public class WithGenericFunctions {
         return ret;
     }
 
+    /**
+     * Method that returns a list of after methods from a root that match with de arguments types
+     *
+     * @param typeTree - the search tree
+     * @param classes  - the arguments
+     * @return the list of matched methods
+     * @throws ClassNotFoundException
+     */
     public static Method[] findAfterHooks(TypeNode typeTree, Class<?>[] classes) throws ClassNotFoundException {
         List<Method> hooks = findAllMethods(typeTree, classes);
         Collections.reverse(hooks);
@@ -391,6 +379,15 @@ public class WithGenericFunctions {
         return ret;
     }
 
+
+    /**
+     * Method that returns a list of before methods from a root that match with de arguments types
+     *
+     * @param typeTree - the search tree
+     * @param classes  - the arguments
+     * @return the list of matched methods
+     * @throws ClassNotFoundException
+     */
     public static Method[] findBeforeHooks(TypeNode typeTree, Class<?>[] classes) throws ClassNotFoundException {
         List<Method> hooks = findAllMethods(typeTree, classes);
 
@@ -440,62 +437,5 @@ public class WithGenericFunctions {
         */
     }
 
-    /**
-     * Return a collection of methods grouped by their distance to the root class
-     *
-     * @param typeTree
-     * @param classes
-     * @param distance how many times getSuperclass/getInterface has been called to get here
-     * @return
-     */
-    private static Map<Integer, List<Method>> _findAllMethods(TypeNode typeTree, Class<?>[] classes, Integer distance) {
-        Map<Integer, List<Method>> ret = new HashMap<>();
-        recurseSuperClasses(typeTree, ret, classes, 0, 0);
-        return ret;
-    }
-
-    /**
-     * Do the recursive lookup of methods. Rank them according to a distance. Like
-     * CLOS, exaust the furthest right member of the array before moving up on the
-     * other indexes
-     */
-    private static int recurseSuperClasses(TypeNode typeTree, Map<Integer, List<Method>> distanceMap, Class<?>[] classes, Integer index, Integer distance) {
-        classes = classes.clone();
-        for (int i = index; i < classes.length - 1; i++) {
-            while (classes[i] != null) {
-                distance = recurseSuperClasses(typeTree, distanceMap, classes, i + 1, distance);
-                classes[i] = classes[i].getSuperclass();
-            }
-        }
-
-        int rightMost = classes.length - 1;
-        if (index == rightMost)
-            while (classes[rightMost] != null) {
-                try {
-                    Method method = getMethodFrom(typeTree, classes);
-                    List<Method> list = getOrInit(distanceMap, distance++);
-                    list.add(method);
-                } catch (Exception e) {
-                }
-                classes[rightMost] = classes[rightMost].getSuperclass();
-            }
-        return distance;
-    }
-
-    /**
-     * Get the list. Initiate it if its empty
-     *
-     * @param ret
-     * @param distance
-     * @return
-     */
-    private static List<Method> getOrInit(Map<Integer, List<Method>> ret, Integer distance) {
-        List<Method> list = ret.get(distance);
-        if (list == null) {
-            list = new ArrayList<Method>();
-            ret.put(distance, list);
-        }
-        return list;
-    }
 
 }
