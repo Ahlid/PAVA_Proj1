@@ -100,12 +100,6 @@ public class GFTranslator implements Translator {
                 }
             }
 
-            try {
-                ctClass.writeFile("C:\\Users\\tiago\\Documents\\PAVA_Proj1\\ist\\" + ctClass.getName() + ".java");
-            } catch (Exception e) {
-
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new InitializationException("Class " + className + " was not able to make generic.");
