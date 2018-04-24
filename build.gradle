@@ -30,5 +30,5 @@ configurations {
 
 run {
     standardInput = System.in
-    args = ["pa.tests.TestK"]
+    args = ["ist.meic.pa.ok"]
 }

@@ -221,25 +221,21 @@ public class WithGenericFunctions {
 
     public static Method findBest2(TypeNode root, Class<?>[] classes) throws NoSuchMethodException, SecurityException {
 
+
         Method method = null;
-        Method cachedMethod = MethodCache.getCachedMethod(classes);
-        if (cachedMethod != null) {
-        	return cachedMethod;
-        } else {
-        	List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
-        	for (List<Class> arguments : argumentsCombinations) {
-        		try {
-        			method = getMethodFrom(root, getArrayClassFromList(arguments));
-        			break;
-        		} catch (Exception e) {
-        			continue;
-        		}
-        	}
-        	if (method != null) {
-        		MethodCache.cacheMethod(method, classes);
-        	}
-        	return method;
+
+        List<List<Class>> argumentsCombinations = getAllClassCombinations(classes);
+        for (List<Class> arguments : argumentsCombinations) {
+            try {
+                method = getMethodFrom(root, getArrayClassFromList(arguments));
+                break;
+            } catch (Exception e) {
+                continue;
+            }
         }
+
+        return method;
+
 
     }
 
@@ -418,7 +414,7 @@ public class WithGenericFunctions {
 
         for (List<Class> arguments : argumentsCombinations) {
 
-           // System.out.println(arguments);
+            // System.out.println(arguments);
 
             try {
                 methods.add(getMethodFrom(typeTree, getArrayClassFromList(arguments)));

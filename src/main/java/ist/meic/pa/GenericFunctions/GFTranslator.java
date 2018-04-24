@@ -50,6 +50,15 @@ public class GFTranslator implements Translator {
             ctField.setModifiers(Modifier.PUBLIC | Modifier.FINAL | Modifier.STATIC);
             ctClass.addField(ctField);
 
+            //add the tree map to the class
+            CtField ctFieldCache = CtField.make(
+                    "ist.meic.pa.GenericFunctions.MethodCache my$cache =" +
+                            " new ist.meic.pa.GenericFunctions.MethodCache();",
+                    ctClass);
+
+            ctFieldCache.setModifiers(Modifier.PUBLIC | Modifier.FINAL | Modifier.STATIC);
+            ctClass.addField(ctFieldCache);
+
             //check the methods to apply the genericFunction method
             for (Map.Entry<String, Integer> entry : counts.entrySet()) {
 
@@ -83,6 +92,13 @@ public class GFTranslator implements Translator {
                     ctClass.addMethod(proxy);
                 }
             }
+
+            try {
+                ctClass.writeFile("C:\\Users\\tiago\\Documents\\PAVA_Proj1\\ist\\" + ctClass.getName() + ".java");
+            } catch (Exception e) {
+
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new InitializationException("Class " + className + " was not able to make generic.");
@@ -115,17 +131,62 @@ public class GFTranslator implements Translator {
 
     private String getInjectedCode(String name, String className, boolean isStatic) {
 
+
         return "{\n" +
-                "\n" +
-                "        ist.meic.pa.GenericFunctions.structure.TypeNode root = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original\");\n" +
-                "        ist.meic.pa.GenericFunctions.structure.TypeNode beforeRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@BeforeMethod\");\n" +
-                "        ist.meic.pa.GenericFunctions.structure.TypeNode afterRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@AfterMethod\");\n" +
-                "\n" +
                 "        Class[] classes = new Class[$1.length];\n" +
                 "\n" +
                 "        for (int i = 0; i < $1.length; i++) {\n" +
                 "            classes[i] = $1[i].getClass();\n" +
                 "        }\n" +
+                "\n" +
+               // "if(false){\n" +
+                "if(my$cache.isCached(classes)){\n" +
+
+                "            java.lang.reflect.Method[] beforeMethods = my$cache.getBeforeMethods(classes);\n" +
+                "            java.lang.reflect.Method method = my$cache.getMethod(classes);\n" +
+                "            java.lang.reflect.Method[] afterMethods = my$cache.getAfterMethods(classes);\n"+
+                "\n"+
+                "\n" +
+                "            if (beforeMethods != null)\n" +
+                "                for (int i = 0; i < beforeMethods.length; i++) {\n" +
+                "                	beforeMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
+                "\n" +
+                "\n" +
+                "            Object result =  method.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "\n" +
+                "            if (afterMethods != null)\n" +
+                "                for (int i = 0; i < afterMethods.length; i++) {\n" +
+                "                	afterMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
+                "\n" +
+               // "System.out.println(my$cache);\n"+
+                "            return ($r) result;\n" +
+                "\n" +
+                "}\n" +
+                // "  if(my$cache.isCached(classes)){\n" +
+
+               /* "            java.util.List<java.lang.reflect.Method> beforeMethods = my$cache.getBeforeMethods(classes);\n" +
+
+                "            if (beforeMethods != null)\n" +
+                "                for (java.lang.reflect.Method beforeMethod : beforeMethods) {\n" +
+                "                	beforeMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
+                "\n" +
+                "\n" +
+                "            Object result =  method.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "\n" +
+                "            if (afterMethods != null)\n" +
+                "                for (java.lang.reflect.Method afterMethod : afterMethods) {\n" +
+                "                	afterMethod.invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
+                "        		 }\n" +
+                "\n" +
+                "            return ($r) result;\n" +*/
+                // "}\n"+
+                "\n" +
+                "        ist.meic.pa.GenericFunctions.structure.TypeNode root = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original\");\n" +
+                "        ist.meic.pa.GenericFunctions.structure.TypeNode beforeRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@BeforeMethod\");\n" +
+                "        ist.meic.pa.GenericFunctions.structure.TypeNode afterRoot = (ist.meic.pa.GenericFunctions.structure.TypeNode) typeTree.get(\"" + name + "$original@AfterMethod\");\n" +
                 "\n" +
                 "\n" +
                 "        try {\n" +
@@ -143,6 +204,10 @@ public class GFTranslator implements Translator {
                 "                for (int i = 0; i < afterMethods.length; i++) {\n" +
                 "                	afterMethods[i].invoke(" + (isStatic ? className + ".class" : "this") + ", $1);\n" +
                 "        		 }\n" +
+                "\n" +
+                "my$cache.cacheMethod(classes, method);\n" +
+                "my$cache.cacheBeforeMethods(classes, beforeMethods);\n" +
+                "my$cache.cacheAfterMethods(classes, afterMethods);\n" +
                 "\n" +
                 "            return ($r) result;\n" +
                 "\n" +
